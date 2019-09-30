@@ -1,7 +1,5 @@
 const Odoo = require('odoo-xmlrpc')
 require('dotenv').config()
-const cote = require('cote');
-const listener = new cote.Responder({ name: 'API Flectra Listener', envairoment: 'production', key: 'flectra' });
 
 
 // methods
@@ -22,36 +20,41 @@ const loadDeployData = {
 }
 
 class Flectra {
-    constructor(deployData) {
+    constructor(deployData = loadDeployData, evenListener) {
         this.flectraConnect(deployData)
 
-        listener.on('createElement', async (req = {}, cb) => {
-            console.log('apiflectra createElement: ', req)
-            let { context = {}, model, element } = req
-            let result = await this.createElement(context, model, element)
-            cb(null, result)
-        });
+        if (evenListener) {
+            const cote = require('cote');
+            const listener = new cote.Responder({ name: 'API Flectra Listener', envairoment: 'production', key: 'flectra' });
+            
+            listener.on('createElement', async (req = {}, cb) => {
+                console.log('apiflectra createElement: ', req)
+                let { context = {}, model, element } = req
+                let result = await this.createElement(context, model, element)
+                cb(null, result)
+            });
 
-        listener.on('readElement', async (req = {}, cb) => {
-            console.log('apiflectra readElement: ', req)
-            let { model, filter, fields, offset, limit } = req
-            let result = await this.readElement(model, filter, fields, offset, limit)
-            cb(null, result)
-        });
+            listener.on('readElement', async (req = {}, cb) => {
+                console.log('apiflectra readElement: ', req)
+                let { model, filter, fields, offset, limit } = req
+                let result = await this.readElement(model, filter, fields, offset, limit)
+                cb(null, result)
+            });
 
-        listener.on('updateElement', async (req = {}, cb) => {
-            console.log('apiflectra updateElement: ', req)
-            let { model, element } = req
-            let result = await this.updateElement(model, element)
-            cb(null, result)
-        });
+            listener.on('updateElement', async (req = {}, cb) => {
+                console.log('apiflectra updateElement: ', req)
+                let { model, element } = req
+                let result = await this.updateElement(model, element)
+                cb(null, result)
+            });
 
-        listener.on('deleteElement', async (req = {}, cb) => {
-            console.log('apiflectra deleteElement: ', req)
-            let { model, id } = req
-            let result = await this.deleteElement(model, id)
-            cb(null, result)
-        });
+            listener.on('deleteElement', async (req = {}, cb) => {
+                console.log('apiflectra deleteElement: ', req)
+                let { model, id } = req
+                let result = await this.deleteElement(model, id)
+                cb(null, result)
+            });
+        }
     }
 
 
