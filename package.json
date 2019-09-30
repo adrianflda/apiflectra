@@ -4,6 +4,7 @@
   "description": "node app for api flectra usage",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,7 +22,8 @@
   },
   "homepage": "https://github.com/adrianflda/apiflectra#readme",
   "dependencies": {
-    "dotenv": "^8.0.0",
+    "cote": "^0.21.1",
+    "dotenv": "^8.1.0",
     "odoo-xmlrpc": "^1.0.8"
   }
 }

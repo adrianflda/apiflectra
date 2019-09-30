@@ -1,6 +1,7 @@
 'use strict';
 require('dotenv').config()
-const main = require('../index');
+const Flectra = require('../flectra');
+const main = new Flectra()
 
 const deployData = {
     "url": process.env.URL,

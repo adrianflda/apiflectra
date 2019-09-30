@@ -1,0 +1,6 @@
+version: '2'
+services:
+  apiflectra:
+    build: .
+    restart: on-failure
+
