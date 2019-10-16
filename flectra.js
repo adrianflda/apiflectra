@@ -103,7 +103,7 @@ class Flectra {
                 })
                 return
             }
-            reject(flectra)
+            reject(this.flectra)
         })
     }
 
