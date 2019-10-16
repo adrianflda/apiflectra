@@ -34,6 +34,7 @@ const main = async () => {
                 team_id: 118
             }
             await main.updateElement('crm.lead', newLead)
+            console.log(index)
             index++
         }
     } catch (error) {
