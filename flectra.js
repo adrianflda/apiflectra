@@ -62,14 +62,10 @@ class Flectra {
      * 
      * @param {Object} deployData deploy parameters
      */
-    flectraConnect(deployData = loadDeployData) {
+    connect(deployData = loadDeployData) {
         console.log(deployData)
         return new Promise((resolve, reject) => {
             try {
-                if (this.flectra) {
-                    resolve(this.flectra)
-                    return
-                }
                 this.flectra = new Odoo(deployData)
                 this.flectra.connect((err, value) => {
                     if (err) {
