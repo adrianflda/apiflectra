@@ -20,8 +20,8 @@ const loadDeployData = {
 }
 
 class Flectra {
-    constructor(deployData, evenListener) {
-        this.connect(deployData)
+    async constructor(deployData, evenListener) {
+        await this.connect(deployData)
 
         if (evenListener) {
             const cote = require('cote');
