@@ -20,7 +20,7 @@ const deployData = {
 const main = async () => {
     try {
         let main = new Flectra(deployData)
-        await main.connect()
+        main = await main.connect()
         //let team = await main.readElement('crm.team', [['name', '=', 'Parejeros-MTY-TP']])
         // let agents = team && team.x_agent_ids
         let leads = await main.readElement('crm.lead', [['user_id', '=', 18]]);
