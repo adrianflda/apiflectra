@@ -35,6 +35,7 @@ const main = async () => {
             while (index < part) {
                 let element = leads[index]
                 let newLead = {
+                    id: element.id,
                     user_id,
                     team_id: 118,
                     type: 'opportunity'
@@ -42,7 +43,7 @@ const main = async () => {
                 let result = await main.updateElement('crm.lead', newLead)
                 console.log('update lead result: ', result)
                 result = await main.execute_kw('crm-lead', 'convert_opportunity', [
-                    [element.id], {}
+                    [newLead.id], {}
                 ])
                 console.log('convert lead result: ', result)
                 console.log(index)

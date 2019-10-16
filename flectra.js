@@ -150,8 +150,11 @@ class Flectra {
                 return
             }
 
+            let id = element.id
+            delete element.id
+
             let inParams = [];
-            inParams.push([element.id]);
+            inParams.push([id]);
             inParams.push(element)
             let params = [];
             params.push(inParams);
