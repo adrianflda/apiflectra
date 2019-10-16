@@ -94,6 +94,7 @@ class Flectra {
     execute_kw(model, method, params) {
         return new Promise((resolve, reject) => {
             if (this.flectra) {
+                console.log('execute_kw: ', model, method, params)
                 this.flectra.execute_kw(model, method, params, (err, value) => {
                     if (err) {
                         reject(err)
@@ -101,7 +102,6 @@ class Flectra {
                     }
                     resolve(value)
                 })
-                return
             }
             reject(this.flectra)
         })
@@ -154,7 +154,6 @@ class Flectra {
             let params = [];
             params.push(inParams);
 
-            console.log('updateElement: ', model, params)
             this.execute_kw(model, WRITE, params)
                 .then(result => resolve(result))
                 .catch(e => reject(e))
