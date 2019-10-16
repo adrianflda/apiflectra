@@ -4,6 +4,6 @@ WORKDIR /src
 ADD package.json .
 RUN npm install
 
-ADD . .
+COPY . .
 
 CMD [ "npm", "start" ]
