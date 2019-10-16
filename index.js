@@ -25,9 +25,11 @@ const main = async () => {
         console.log('team: ', team)
         let agents = team && team.x_agent_ids
         console.log('agents: ', agents && agents.length)
-        let leads = await main.readElement('crm.lead', [['type', '=', 'lead'],['name','ilike', 'vr-tp-mty']]);
+        let leads = await main.readElement('crm.lead', [['type', '=', 'lead'], ['name', 'ilike', 'vr-tp-mty']]);
         console.log('elements: ', leads.length)
-        agents && agents.forEach(async user_id => {
+        let agentIndex = 0
+        while (agentIndex < agents.length) {
+            let user_id = agents[agentIndex]
             let part = leads.length / agents.length
             let index = 0
             while (index < part) {
@@ -41,13 +43,15 @@ const main = async () => {
                 let result = await main.updateElement('crm.lead', newLead)
                 console.log('update lead result: ', result)
                 result = await main.execute_kw('crm-lead', 'convert_opportunity', [
-                    [newLead.id], { }
+                    [newLead.id], {}
                 ])
-                console.log('convert lead result: ', result) 
+                console.log('convert lead result: ', result)
                 console.log(index)
                 index++
             }
-        })
+            agentIndex++
+            console.log('agent: ', agentIndex)
+        }
     } catch (error) {
         console.log('main error: ', error)
     }
