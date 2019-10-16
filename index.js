@@ -40,12 +40,13 @@ const main = async () => {
                     team_id: 118,
                     type: 'opportunity'
                 }
-                let result = await main.updateElement('crm.lead', newLead)
+                main.deleteElement('crm.lead', element.id)
+                /* let result = await main.updateElement('crm.lead', newLead)
                 console.log('update lead result: ', result)
                 result = await main.execute_kw('crm-lead', 'convert_opportunity', [
                     [newLead.id], {}
                 ])
-                console.log('convert lead result: ', result)
+                console.log('convert lead result: ', result) */
                 console.log(index)
                 index++
             }
