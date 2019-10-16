@@ -27,14 +27,14 @@ const main = async () => {
         console.log('agents: ', agents && agents.length)
         let leads = await main.readElement('crm.lead', [['type', '=', 'lead'],['name','ilike', 'vr-tp-mty']]);
         console.log('elements: ', leads.length)
-        agents && agents.forEach(async agent => {
+        agents && agents.forEach(async user_id => {
             let part = leads.length / agents.length
             let index = 0
             while (index < part) {
                 let element = leads[index]
                 let newLead = {
                     id: element.id,
-                    user_id: agent.id,
+                    user_id,
                     team_id: 118,
                     type: 'opportunity'
                 }
