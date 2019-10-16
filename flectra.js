@@ -96,7 +96,7 @@ class Flectra {
             if (this.flectra) {
                 console.log('execute_kw: ', model, method, params)
                 this.flectra.execute_kw(model, method, params, (err, value) => {
-                    console.log(value)
+                    console.log('execute_kw result')
                     if (err) {
                         reject(err)
                         return
