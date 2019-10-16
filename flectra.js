@@ -137,7 +137,7 @@ class Flectra {
      * @param {Object} element Specific element to update
      */
     updateElement(model, element) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise( (resolve, reject) => {
             if (!model || !element || !element.id) {
                 console.log('error', 'updateElement', [model, element])
                 reject('no element')
@@ -150,6 +150,7 @@ class Flectra {
             let params = [];
             params.push(inParams);
 
+            console.log('updateElement: ', model, params)
             this.execute_kw(model, WRITE, params)
                 .then(result => resolve(result))
                 .catch(e => reject(e))
