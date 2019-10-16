@@ -3,7 +3,7 @@ require('dotenv').config()
 const Flectra = require('./flectra');
 const { Sema } = require('async-sema');
 const s = new Sema(
-    4, // Allow 4 concurrent async calls
+    1, // Allow 4 concurrent async calls
     {
         capacity: 1000 // Prealloc space for 100 tokens
     }
