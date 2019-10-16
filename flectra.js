@@ -66,6 +66,10 @@ class Flectra {
         console.log('connecting to flcetra', deployData)
         return new Promise((resolve, reject) => {
             try {
+                if (this.flectra) {
+                    resolve(this.flectra)
+                    return
+                }
                 this.flectra = new Odoo(deployData)
                 this.flectra.connect((err, value) => {
                     if (err) {
@@ -137,7 +141,7 @@ class Flectra {
      * @param {Object} element Specific element to update
      */
     updateElement(model, element) {
-        return new Promise( (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (!model || !element || !element.id) {
                 console.log('error', 'updateElement', [model, element])
                 reject('no element')
