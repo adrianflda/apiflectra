@@ -21,22 +21,25 @@ const main = async () => {
     try {
         let main = new Flectra(deployData)
         await main.connect()
-        //let team = await main.readElement('crm.team', [['name', '=', 'Parejeros-MTY-TP']])
-        // let agents = team && team.x_agent_ids
-        let leads = await main.readElement('crm.lead', [['user_id', '=', 18]]);
+        let team = await main.readElement('crm.team', [['name', '=', 'Parejeros-MTY-TP']])
+        let agents = team && team.x_agent_ids
+        let leads = await main.readElement('crm.lead', [['type', '=', 'lead']]);
         console.log('elements: ', leads.length)
-        let index = 0
-        while (index < leads.length) {
-            let element = leads[index]
-            let newLead = {
-                id: element.id,
-                user_id: 80,
-                team_id: 118
+        agents && agents.forEach(agent => {
+            let part = leads.length / agents.length
+            let index = 0
+            while (index < part) {
+                let element = leads[index]
+                let newLead = {
+                    id: element.id,
+                    user_id: agent.id,
+                    team_id: 118
+                }
+                await main.updateElement('crm.lead', newLead)
+                console.log(index)
+                index++
             }
-            await main.updateElement('crm.lead', newLead)
-            console.log(index)
-            index = leads.length
-        }
+        })
     } catch (error) {
         console.log('main error: ', error)
     }
