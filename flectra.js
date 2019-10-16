@@ -20,7 +20,7 @@ const loadDeployData = {
 }
 
 class Flectra {
-    async constructor(deployData, evenListener) {
+    constructor(deployData, evenListener) {
         this.deployData = deployData
 
         if (evenListener) {
