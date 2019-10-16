@@ -40,7 +40,7 @@ const main = async () => {
                     team_id: 118,
                     type: 'opportunity'
                 }
-                main.deleteElement('crm.lead', element.id)
+                await main.deleteElement('crm.lead', element.id)
                 /* let result = await main.updateElement('crm.lead', newLead)
                 console.log('update lead result: ', result)
                 result = await main.execute_kw('crm-lead', 'convert_opportunity', [
