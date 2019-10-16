@@ -21,7 +21,7 @@ const loadDeployData = {
 
 class Flectra {
     constructor(deployData, evenListener) {
-        this.flectraConnect(deployData)
+        this.connect(deployData)
 
         if (evenListener) {
             const cote = require('cote');
