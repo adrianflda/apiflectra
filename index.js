@@ -35,7 +35,7 @@ const main = async () => {
             }
             await main.updateElement('crm.lead', newLead)
             console.log(index)
-            index++
+            index = leads.length
         }
     } catch (error) {
         console.log('main error: ', error)
