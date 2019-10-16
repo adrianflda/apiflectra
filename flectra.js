@@ -102,8 +102,9 @@ class Flectra {
                     }
                     resolve(value)
                 })
-            }
-            reject(this.flectra)
+                return
+            } else
+                reject('flectra is not initialized')
         })
     }
 
