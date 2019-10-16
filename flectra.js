@@ -72,7 +72,7 @@ class Flectra {
                         reject(err)
                         return
                     }
-                    console.log(this.flectra, value)
+                    console.log('user_id: ', value)
                     resolve(this.flectra);
                 })
             } catch (error) {

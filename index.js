@@ -14,11 +14,8 @@ const deployData = {
 
 const main = async () => {
     let main = new Flectra(deployData)
-    console.log(main)
-    let connection = await main.connect()
-    console.log('connection:' ,connection)
     let leads = await main.readElement('crm.lead', [['name', 'like', 'vr-tp-mty']]);
-    console.log(leads.length)
+    console.log('elements: ', leads.length)
 }
 
 main()
