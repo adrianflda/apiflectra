@@ -25,16 +25,17 @@ const main = async () => {
         // let agents = team && team.x_agent_ids
         let leads = await main.readElement('crm.lead', [['user_id', '=', 18]]);
         console.log('elements: ', leads.length)
-        leads.forEach(async element => {
-            await s.acquire()
+        let index = 0
+        while (index < leads.length) {
+            let element = leads[index]
             let newLead = {
                 id: element.id,
                 user_id: 80,
                 team_id: 118
             }
             await main.updateElement('crm.lead', newLead)
-            await s.release()
-        });
+            index++
+        }
     } catch (error) {
         console.log('main error: ', error)
     }
