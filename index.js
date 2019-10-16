@@ -23,6 +23,7 @@ const main = async () => {
         await main.connect()
         let team = await main.readElement('crm.team', [['name', '=', 'Parejeros-MTY-TP']])
         let agents = team && team.x_agent_ids
+        console.log('agents: ', agents && agents.length)
         let leads = await main.readElement('crm.lead', [['type', '=', 'lead'],['name','ilike', 'vr-tp-mty']]);
         console.log('elements: ', leads.length)
         agents && agents.forEach(async agent => {
