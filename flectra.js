@@ -21,7 +21,7 @@ const loadDeployData = {
 
 class Flectra {
     async constructor(deployData, evenListener) {
-        await this.connect(deployData)
+        this.deployData = deployData
 
         if (evenListener) {
             const cote = require('cote');
@@ -63,7 +63,7 @@ class Flectra {
      * @param {Object} deployData deploy parameters
      */
     connect(deployData = loadDeployData) {
-        console.log(deployData)
+        console.log('connecting to flcetra', deployData)
         return new Promise((resolve, reject) => {
             try {
                 this.flectra = new Odoo(deployData)
