@@ -26,7 +26,7 @@ class Flectra {
         if (evenListener) {
             const cote = require('cote');
             const listener = new cote.Responder({ name: 'API Flectra Listener', envairoment: 'production', key: 'flectra' });
-            
+
             listener.on('createElement', async (req = {}, cb) => {
                 console.log('apiflectra createElement: ', req)
                 let { context = {}, model, element } = req
@@ -63,6 +63,7 @@ class Flectra {
      * @param {Object} deployData deploy parameters
      */
     flectraConnect(deployData = loadDeployData) {
+        console.log(deployData)
         return new Promise((resolve, reject) => {
             try {
                 if (this.flectra) {
@@ -75,12 +76,12 @@ class Flectra {
                         reject(err)
                         return
                     }
-                    resolve(flectra);
+                    console.log(this.flectra, value)
+                    resolve(this.flectra);
                 })
             } catch (error) {
                 reject(error)
             }
-
         })
     }
 
@@ -90,15 +91,10 @@ class Flectra {
      * @param {String} method Flectra method 
      * @param {Array} params Parameters for each job 
      */
-    async execute_kw(model, method, params) {
-        return new Promise(async (resolve, reject) => {
-            let flectra = this.flectra || await flectraConnect()
-                .catch(err => {
-                    reject(err)
-                })
-
-            if (flectra) {
-                flectra.execute_kw(model, method, params, (err, value) => {
+    execute_kw(model, method, params) {
+        return new Promise((resolve, reject) => {
+            if (this.flectra) {
+                this.flectra.execute_kw(model, method, params, (err, value) => {
                     if (err) {
                         reject(err)
                         return
@@ -132,7 +128,7 @@ class Flectra {
             let params = [];
             params.push(inParams);
 
-            execute_kw(model, CREATE, params)
+            this.execute_kw(model, CREATE, params)
                 .then(result => resolve(result))
                 .catch(e => reject(e))
 
@@ -158,7 +154,7 @@ class Flectra {
             let params = [];
             params.push(inParams);
 
-            execute_kw(model, WRITE, params)
+            this.execute_kw(model, WRITE, params)
                 .then(result => resolve(result))
                 .catch(e => reject(e))
 
@@ -190,7 +186,7 @@ class Flectra {
                 var params = []
                 params.push(inParams)
 
-                let result = await execute_kw(model, SEARCH_READ, params)
+                let result = await this.execute_kw(model, SEARCH_READ, params)
 
                 if (fields) {
                     let array = []
@@ -209,7 +205,7 @@ class Flectra {
                 resolve(result)
 
             } catch (error) {
-                console.log('error', 'readElement', [error])
+                console.log('error', 'readElement', error)
                 reject(error)
             }
 
@@ -222,7 +218,7 @@ class Flectra {
         let params = [];
         params.push(inParams);
         return new Promise((resolve, reject) => {
-            execute_kw(model, UNLINK, params)
+            this.execute_kw(model, UNLINK, params)
                 .then(result => resolve(result))
                 .catch(e => reject(e))
         })

@@ -17,5 +17,4 @@ describe('flectra connection test', () => {
         let connection = await main.flectraConnect(deployData);
         console.log(connection)
     });
-
 })

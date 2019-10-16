@@ -24,6 +24,8 @@
   "dependencies": {
     "cote": "^0.21.1",
     "dotenv": "^8.1.0",
-    "odoo-xmlrpc": "^1.0.8"
+    "odoo-xmlrpc": "^1.0.7",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
   }
 }
