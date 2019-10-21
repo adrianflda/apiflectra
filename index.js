@@ -532,6 +532,7 @@ const createCalendarEvent = async (lead, calendar_event_id) => {
     let event = await oldFlectra.readElement('calendar.event', [['id', '=', calendar_event_id]], 0, 0, 1)
 
     let {
+        res_model_id,
         description,
         stop_datetime,
         stop_date,
