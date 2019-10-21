@@ -547,7 +547,7 @@ const getCustomers = async () => {
 }
 
 const migrateLeads = async () => {
-    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], 0, 0, 0)
+    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY'], ['type', '=', 'opportunity']], 0, 0, 0)
     let index = 0
     while (index < leads.length) {
         let lead = leads[index]
