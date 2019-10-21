@@ -399,7 +399,7 @@ const createLead = async (lead) => {
         country_id: country_id && country_id[0],
         partner_id: newPartner.id,
         user_id: newUser.id,
-        team_id,
+        team_id: team_id[0],
         stage_id: newStage.id,
         notes: x_sourse_notes,
         color,
