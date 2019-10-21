@@ -637,7 +637,7 @@ const createActivity = async (lead, activity = {}) => {
 }
 
 const updatePhoneCalls = async (lead, phonecall_ids) => {
-    let phonecalls = await oldFlectra.readElement('crm.lead', [['id', 'in', phonecall_ids]], 0, 0, 0)
+    let phonecalls = await oldFlectra.readElement('crm.phonecall', [['id', 'in', phonecall_ids]], 0, 0, 0)
     let index = 0
     while (index < phonecalls.length) {
         let phonecall = phonecalls[index]
