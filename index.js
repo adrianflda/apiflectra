@@ -709,11 +709,27 @@ const migrateLeads = async () => {
     }
 }
 
+const updateLeads = async () => {
+    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY'], ['type', '=', 'opportunity']], 0, 0, 0)
+    let index = 0
+
+    while (index < leads.length) {
+        let lead = leads[index]
+        let newLead = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id', 'user_id', 'partner_id'], 0, 1)
+        if (newLead && newLead.id) {
+            await updatePhoneCalls(newLead, lead.phonecall_ids)
+            await updateLeadActivities(newLead, lead.activity_ids)
+        }
+        console.log(index++)
+    }
+}
+
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
     //await getCustomers()
-    migrateLeads()
+    //migrateLeads()
+    updateLeads()
 }
 
 main()
