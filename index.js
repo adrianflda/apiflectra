@@ -407,8 +407,8 @@ const createLead = async (lead) => {
 
 const getCustomers = async (oldFlectra, newFlectra) => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
-    let index = 0
-    while (index < leads.length) {
+    let index = leads.length
+    while (index > 0) {
         let lead = leads[index]
         console.log(lead.partner_id)
         let partner_id = lead.partner_id[0]
@@ -422,11 +422,11 @@ const getCustomers = async (oldFlectra, newFlectra) => {
                 console.log(result)
             }
         }
-        index++
+        index--
     }
 }
 
-const getCustomers = async (oldFlectra, newFlectra) => {
+const migrateLeads = async () => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], 0, 0, 0)
     let index = 0
     while (index < leads.length) {
@@ -442,7 +442,8 @@ const getCustomers = async (oldFlectra, newFlectra) => {
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
-    getCustomers(oldFlectra, newFlectra)
+    await getCustomers()
+    migrateLeads()
 }
 
 main()
