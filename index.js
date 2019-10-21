@@ -465,7 +465,11 @@ const createSimpleLead = async (lead) => {
         user_id,
         team_id,
         stage_id,
-        color
+        color,
+        activity_summary,
+        activity_state,
+        activity_date_deadline,
+        activity_type_id
     } = lead
 
     let user = user_id && user_id[0] && await oldFlectra.readElement('res.users', [['id', '=', user_id[0]]], ['name', 'login'], 0, 1)
