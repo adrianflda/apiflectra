@@ -641,6 +641,18 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
     let index = 0
     while (index < phonecalls.length) {
         let phonecall = phonecalls[index]
+        let {
+            name,
+            x_subject,
+        } = phonecall
+
+        let newPhonecall = {
+            description: name,
+            name: x_subject,
+            partner_id: lead.partner_id[0],
+            opportunity_id: lead.id,
+            user_id: lead.user_id[0],
+        }
         console.log('phonecall: ', index++, phonecall)
     }
 }
