@@ -287,7 +287,7 @@ const init = async (flectra) => {
     flectra && await flectra.connect()
 }
 
-const formatClient = async (partner) => {
+const formatClient = (partner) => {
     let {
         name,
         email,
