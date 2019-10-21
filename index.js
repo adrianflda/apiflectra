@@ -556,7 +556,7 @@ const migrateLeads = async () => {
             let newLead = await createSimpleLead(lead)
             console.log('new opportunity: ', newLead && newLead.name)
         }
-        index++
+        console.log(index++)
     }
 }
 
