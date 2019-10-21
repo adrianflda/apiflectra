@@ -279,8 +279,11 @@ const getLeads = async () => {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const main = new Flectra(deployData)
-main.connect()
+const oldFlectra = new Flectra(deployData)
+
+const init = async (flectra) => {
+    flectra && await flectra.connect()
+}
 
 const createClient = async (partner) => {
     let {
@@ -316,4 +319,9 @@ const getCustomers = async () => {
 
 // assignLeadsToAgent('laura.mendoza@vacancyrewards.com', 'darani.espinosa@vacancyrewards.com')
 
-getCustomers()
+const main = async () => {
+    await init(oldFlectra)
+    getCustomers()
+}
+
+main()
