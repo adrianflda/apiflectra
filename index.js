@@ -407,7 +407,7 @@ const createLead = async (lead) => {
 
 const getCustomers = async () => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
-    let index = leads.length
+    let index = leads.length -1
     while (index > 0) {
         let lead = leads[index]
         console.log(lead.partner_id)
