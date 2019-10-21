@@ -567,7 +567,7 @@ const createCalendarEvent = async (lead, calendar_event_id) => {
         res_id: lead.id,
         partner_id: lead.partner_id[0],
         res_model_id: res_model_id[0],
-        user_id: lead.user_id,
+        user_id: lead.user_id[0],
         description,
         stop_datetime,
         stop_date,
