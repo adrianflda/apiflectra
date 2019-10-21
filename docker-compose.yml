@@ -3,4 +3,5 @@ services:
   apiflectra:
     build: .
     restart: on-failure
-
+    volumes:
+      - ../files/:/home
