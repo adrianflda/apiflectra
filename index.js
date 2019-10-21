@@ -642,7 +642,8 @@ const summary_ids = {
     'No Interesado': 3,
     'Interesado': 4,
     'Desea Cancelar Su Membresia': 5,
-    'No Contactar': 6
+    'No Contactar': 6,
+    'Empty summary': 7
 }
 
 const updatePhoneCalls = async (lead, phonecall_ids) => {
@@ -660,15 +661,13 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
         let newPhonecall = {
             description: name,
             name: x_subject,
-            summary_id: summary_ids[x_subject],
+            summary_id: (x_subject) ? summary_ids[x_subject] : 7,
             partner_id: lead.partner_id[0],
             opportunity_id: lead.id,
             user_id: lead.user_id[0],
         }
 
-        if (x_subject) {
-            await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
-        }
+        await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
         console.log('phonecall: ', index++, phonecall)
     }
 }
