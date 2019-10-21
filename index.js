@@ -285,7 +285,7 @@ const init = async (flectra) => {
     flectra && await flectra.connect()
 }
 
-const createClient = async (partner) => {
+const formatClient = async (partner) => {
     let {
         name,
         email,
@@ -294,25 +294,38 @@ const createClient = async (partner) => {
         street,
         street2,
         city,
-        country,
-        company_type
+        country_id
     } = partner
 
     let newPartner = {
-
+        name,
+        email,
+        phone,
+        mobile,
+        street,
+        street2,
+        city,
+        country_id: country_id && country_id[0],
+        employee: false,
+        customer: true,
+        type: 'contact',
+        company_type: 'person'
     }
+
+    return newPartner
 }
 
-const getCustomers = async (flectra) => {
-    let leads = await flectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
+const getCustomers = async (oldFlectra, newFlectra) => {
+    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
     let index = 0
     while (index < leads.length) {
         let lead = leads[index]
         console.log(lead.partner_id)
         let partner_id = lead.partner_id[0]
-        let partner = await flectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
-        console.log(partner)
-        // await createClient(partner)
+        let partner = await oldFlectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
+        let newPartner = formatClient(partner)
+        let result = await newFlectra.createElement('res.partner', newPartner) 
+        console.log(result)
         index++
     }
 }
