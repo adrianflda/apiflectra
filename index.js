@@ -358,7 +358,7 @@ const getCustomers = async (oldFlectra, newFlectra) => {
         if (partner_id) {
             let partner = await oldFlectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
             let newPartner = formatClient(partner)
-            let exist = await oldFlectra.readElement('res.partner', [['name', '=', newPartner.name], ['phone', '=', newPartner.phone]], 0, 0, 1)
+            let exist = await oldFlectra.readElement('res.partner', [['name', '=', newPartner.name], ['phone', '=', newPartner.phone]], ['id', 'name','phone'], 0, 1)
             console.log('exist:', exist)
             if (!exist) {
                 let result = await newFlectra.createElement({}, 'res.partner', newPartner)
