@@ -655,11 +655,10 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
             x_subject,
         } = phonecall
 
-        console.log(summary_ids, name, summary_ids[name])
         let newPhonecall = {
             description: name,
             name: x_subject,
-            summary_id: summary_ids[name],
+            summary_id: summary_ids[x_subject],
             partner_id: lead.partner_id[0],
             opportunity_id: lead.id,
             user_id: lead.user_id[0],
