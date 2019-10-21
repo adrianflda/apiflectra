@@ -564,7 +564,6 @@ const migrateLeads = async () => {
             console.log('new opportunity: ', newLead && newLead.name)
         } else {
             await updateLeadActivities(lead)
-            return
         }
         console.log(index++)
     }
