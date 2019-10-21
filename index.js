@@ -656,6 +656,7 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
         } = phonecall
 
         console.log(summary_ids, x_subject, summary_ids[x_subject])
+
         let newPhonecall = {
             description: name,
             name: x_subject,
@@ -665,7 +666,9 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
             user_id: lead.user_id[0],
         }
 
-        await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
+        if (x_subject) {
+            await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
+        }
         console.log('phonecall: ', index++, phonecall)
     }
 }
