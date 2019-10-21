@@ -300,7 +300,7 @@ const formatClient = async (partner) => {
     } = partner
 
     let newPartner = {
-        name,
+        name: name || 'empty field',
         email,
         phone,
         mobile,
