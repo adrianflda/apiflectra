@@ -521,9 +521,9 @@ const updateLeadActivities = async (lead = {}, activity_ids = []) => {
         if (activity.calendar_event_id) {
             let event = await createCalendarEvent(lead, activity.calendar_event_id[0])
             activity.calendar_event_id = event.id
-            console.log(activity)
-            await createActivity(lead, activity)
         }
+        console.log(activity)
+        await createActivity(lead, activity)
     }
 }
 
