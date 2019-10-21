@@ -519,7 +519,7 @@ const updateLeadActivities = async (lead = {}, activity_ids = []) => {
         let activity = activities[index]
         console.log(index++, activity)
         if (activity.calendar_event_id) {
-            let event = await createCalendarEvent(activity.calendar_event_id[0])
+            let event = await createCalendarEvent(lead, activity.calendar_event_id[0])
             activity.calendar_event_id = event.id
             console.log(activity)
             await createActivity(lead, activity)
@@ -528,6 +528,7 @@ const updateLeadActivities = async (lead = {}, activity_ids = []) => {
 }
 
 const createCalendarEvent = async (lead, calendar_event_id) => {
+    console.log('calendar_event_id:', calendar_event_id)
     let event = await oldFlectra.readElement('calendar.event', [['id', '=', calendar_event_id]], 0, 0, 1)
 
     let {
