@@ -332,7 +332,7 @@ const getCustomers = async (oldFlectra, newFlectra) => {
 
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
-    await newFlectra.connect(deployData)
+    await newFlectra.connect(newDeployData)
     getCustomers(oldFlectra, newFlectra)
 }
 
