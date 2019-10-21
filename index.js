@@ -442,7 +442,7 @@ const migrateLeads = async () => {
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
-    await getCustomers()
+    //await getCustomers()
     migrateLeads()
 }
 
