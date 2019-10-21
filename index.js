@@ -691,18 +691,19 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
 const migrateLeads = async () => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY'], ['type', '=', 'opportunity']], 0, 0, 0)
     let index = 0
+
     while (index < leads.length) {
         let lead = leads[index]
         let exist = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id'], 0, 1)
         if (!exist || !exist.id) {
-            let newLead = await createSimpleLead(lead)
-            console.log('new opportunity: ', newLead && newLead.name)
-        } else {
-            let newLead = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id', 'user_id', 'partner_id'], 0, 1)
-            if (newLead && newLead.id) {
-                await updateLeadActivities(newLead, lead.activity_ids)
-                //await updatePhoneCalls(newLead, lead.phonecall_ids)
-            }
+            let id = await createSimpleLead(lead)
+            lead.id = id
+            console.log('new opportunity: ', id)
+        }
+        let newLead = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id', 'user_id', 'partner_id'], 0, 1)
+        if (newLead && newLead.id) {
+            await updatePhoneCalls(newLead, lead.phonecall_ids)
+            await updateLeadActivities(newLead, lead.activity_ids)
         }
         console.log(index++)
     }
