@@ -529,64 +529,64 @@ const createCalendarEvent = async (calendar_event_id) => {
     let event = await oldFlectra.readElement('calendar.event', [['id', '=', calendar_event_id]], 0, 0, 1)
     console.log('event: ', event)
 
-/*     let {
-        res_id: 87155,
-        partner_id: [ 42458, 'DARANI ESPINOSA' ],
-        res_model_id: [ 166, 'Lead/Opportunity' ],
-        user_id: [ 79, 'DARANI ESPINOSA' ],
-        description: false,
-        week_list: false,
-        rrule_type: false,
-        stop_datetime: '2019-10-19 16:00:00',
-        message_channel_ids: [],
-        stop_date: false,
-        is_highlighted: false,
-        interval: 1,
-        month_by: 'date',
-        byday: false,
-        message_follower_ids: [ 159777, 159778 ],
-        applicant_id: false,
-        recurrency: false,
-        message_needaction_counter: 0,
-        recurrent_id_date: false,
-        attendee_ids: [ 96, 97 ],
-        location: false,
-        categ_ids: [],
-        message_ids: [ 1055491, 1055490 ],
-        stop: '2019-10-19 16:00:00',
-        message_partner_ids: [ 42505, 42458 ],
-        count: 1,
-        website_message_ids: [],
-        alarm_ids: [ 8 ],
-        privacy: 'public',
-        message_last_post: false,
-        message_is_follower: false,
-        partner_ids: [ 42458, 42505 ],
-        final_date: false,
-        opportunity_id: [ 87155, 'VR-TP-MTY-00291' ],
-        start_date: false,
-        show_as: 'busy',
-        allday: false,
-        duration: 0,
-        res_model: 'crm.lead',
-        name: 'VR-TP-MTY-00291 Georgina Rodriguez ',
-        active: true,
-        recurrent_id: 0,
-        write_uid: [ 1, 'Administrator' ],
-        phonecall_id: false,
-        is_attendee: false,
-        message_unread_counter: 0,
-        message_unread: false,
-        start_datetime: '2019-10-19 16:00:00',
-        display_start: '2019-10-19 16:00:00',
-        state: 'draft',
-        end_type: 'count',
-        attendee_status: 'needsAction',
-        rrule: '',
-        start: '2019-10-19 16:00:00',
-        day: 1
-    } = event
- */
+    /*     let {
+            res_id: 87155,
+            partner_id: [ 42458, 'DARANI ESPINOSA' ],
+            res_model_id: [ 166, 'Lead/Opportunity' ],
+            user_id: [ 79, 'DARANI ESPINOSA' ],
+            description: false,
+            week_list: false,
+            rrule_type: false,
+            stop_datetime: '2019-10-19 16:00:00',
+            message_channel_ids: [],
+            stop_date: false,
+            is_highlighted: false,
+            interval: 1,
+            month_by: 'date',
+            byday: false,
+            message_follower_ids: [ 159777, 159778 ],
+            applicant_id: false,
+            recurrency: false,
+            message_needaction_counter: 0,
+            recurrent_id_date: false,
+            attendee_ids: [ 96, 97 ],
+            location: false,
+            categ_ids: [],
+            message_ids: [ 1055491, 1055490 ],
+            stop: '2019-10-19 16:00:00',
+            message_partner_ids: [ 42505, 42458 ],
+            count: 1,
+            website_message_ids: [],
+            alarm_ids: [ 8 ],
+            privacy: 'public',
+            message_last_post: false,
+            message_is_follower: false,
+            partner_ids: [ 42458, 42505 ],
+            final_date: false,
+            opportunity_id: [ 87155, 'VR-TP-MTY-00291' ],
+            start_date: false,
+            show_as: 'busy',
+            allday: false,
+            duration: 0,
+            res_model: 'crm.lead',
+            name: 'VR-TP-MTY-00291 Georgina Rodriguez ',
+            active: true,
+            recurrent_id: 0,
+            write_uid: [ 1, 'Administrator' ],
+            phonecall_id: false,
+            is_attendee: false,
+            message_unread_counter: 0,
+            message_unread: false,
+            start_datetime: '2019-10-19 16:00:00',
+            display_start: '2019-10-19 16:00:00',
+            state: 'draft',
+            end_type: 'count',
+            attendee_status: 'needsAction',
+            rrule: '',
+            start: '2019-10-19 16:00:00',
+            day: 1
+        } = event
+     */
 }
 
 const createActivity = async (lead, activity = {}) => {
@@ -636,6 +636,15 @@ const createActivity = async (lead, activity = {}) => {
     return newActivity
 }
 
+const summary_ids = {
+    'Sin Contacto': 1,
+    'Reservado': 2,
+    'No Interesado': 3,
+    'Interesado': 4,
+    'Desea Cancelar Su Membresia': 5,
+    'No Contactar': 6
+}
+
 const updatePhoneCalls = async (lead, phonecall_ids) => {
     let phonecalls = await oldFlectra.readElement('crm.phonecall', [['id', 'in', phonecall_ids]], 0, 0, 0)
     let index = 0
@@ -649,12 +658,13 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
         let newPhonecall = {
             description: name,
             name: x_subject,
+            summary_id: summary_ids[name],
             partner_id: lead.partner_id[0],
             opportunity_id: lead.id,
             user_id: lead.user_id[0],
         }
 
-        await newFlectra.createElement({},'crm.phonecall', newPhonecall)
+        await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
         console.log('phonecall: ', index++, phonecall)
     }
 }
