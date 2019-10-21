@@ -303,14 +303,14 @@ const createClient = async (partner) => {
     }
 }
 
-const getCustomers = async () => {
-    let leads = await main.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
+const getCustomers = async (flectra) => {
+    let leads = await flectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
     let index = 0
     while (index < leads.length) {
         let lead = leads[index]
         console.log(lead.partner_id)
         let partner_id = lead.partner_id[0]
-        let partner = await main.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
+        let partner = await flectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
         console.log(partner)
         // await createClient(partner)
         index++
@@ -321,7 +321,7 @@ const getCustomers = async () => {
 
 const main = async () => {
     await init(oldFlectra)
-    getCustomers()
+    getCustomers(oldFlectra)
 }
 
 main()
