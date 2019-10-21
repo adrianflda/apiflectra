@@ -316,3 +316,4 @@ const getCustomers = async () => {
 
 // assignLeadsToAgent('laura.mendoza@vacancyrewards.com', 'darani.espinosa@vacancyrewards.com')
 
+getCustomers()
