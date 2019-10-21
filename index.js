@@ -340,7 +340,7 @@ const createActivity = async (activity) => {
     return await newFlectra.createElement({}, 'mail.activity', newActivity)
 }
 
-const formatLead = async (lead) => {
+const createLead = async (lead) => {
     let {
         name,
         mobile,
@@ -426,7 +426,18 @@ const getCustomers = async (oldFlectra, newFlectra) => {
     }
 }
 
-// assignLeadsToAgent('laura.mendoza@vacancyrewards.com', 'darani.espinosa@vacancyrewards.com')
+const getCustomers = async (oldFlectra, newFlectra) => {
+    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], 0, 0, 0)
+    let index = 0
+    while (index < leads.length) {
+        let lead = leads[index]
+        let exist = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id'], 0, 1)
+        if (!exist || !exist.id) {
+            createLead(lead)
+        }
+        index++
+    }
+}
 
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
