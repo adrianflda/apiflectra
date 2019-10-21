@@ -283,10 +283,6 @@ const oldDeployData = {
 const oldFlectra = new Flectra(oldDeployData)
 const newFlectra = new Flectra(newDeployData)
 
-const init = async (flectra) => {
-    flectra && await flectra.connect()
-}
-
 const formatClient = (partner) => {
     let {
         name,
@@ -335,8 +331,8 @@ const getCustomers = async (oldFlectra, newFlectra) => {
 // assignLeadsToAgent('laura.mendoza@vacancyrewards.com', 'darani.espinosa@vacancyrewards.com')
 
 const main = async () => {
-    await init(oldFlectra)
-    await init(newFlectra)
+    await oldFlectra.connect(oldDeployData)
+    await newFlectra.connect(deployData)
     getCustomers(oldFlectra, newFlectra)
 }
 
