@@ -331,41 +331,7 @@ const createUser = async (user) => {
     return newUser
 }
 
-const createActivities = async (lead = {}, activities = []) => {
-    activities = await oldFlectra.readElement('mail.activity', [['id', 'in', activities]])
-    let index = 0
-    while (index < activities.length) {
-        let activity = activities[index]
 
-        let {
-            name,
-            activity_category,
-            activity_type_id,
-            summary,
-            date_deadline,
-            user_id,
-            note,
-            res_model,
-            res_model_id,
-            res_id
-        } = activity
-
-        let newActivity = {
-            activity_type_id,
-            summary: activity_summary,
-            date_deadline: activity_date_deadline,
-            user_id: activity_user_id,
-            note: activity_summary,
-            res_model: 'crm-lead',
-            res_model_id: 166,
-            res_id
-        }
-
-        await newFlectra.createElement({}, 'mail.activity', newActivity)
-        index++
-        console.log('activity: ', index, lead.name, a)
-    }
-}
 
 const createLead = async (lead) => {
     let {
@@ -546,6 +512,47 @@ const getCustomers = async () => {
     }
 }
 
+const updateLeadActivities = async (lead = {}) => {
+    let activities = await oldFlectra.readElement('mail.activity', [['id', 'in', lead.activity_ids]])
+    let index = 0
+    while (index < activities.length) {
+        let activity = activities[index]
+        console.log(index++, activity)
+    }
+    return activity
+}
+
+const createActivity = async (activity = {}) => {
+
+    let {
+        name,
+        activity_category,
+        activity_type_id,
+        summary,
+        date_deadline,
+        user_id,
+        note,
+        res_model,
+        res_model_id,
+        res_id
+    } = activity
+
+    let newActivity = {
+        activity_type_id,
+        summary: activity_summary,
+        date_deadline: activity_date_deadline,
+        user_id: activity_user_id,
+        note: activity_summary,
+        res_model: 'crm-lead',
+        res_model_id: 166,
+        res_id
+    }
+
+    let id = await newFlectra.createElement({}, 'mail.activity', newActivity)
+    newActivity.id = id
+    return newActivity
+}
+
 const migrateLeads = async () => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY'], ['type', '=', 'opportunity']], 0, 0, 0)
     let index = 0
@@ -555,6 +562,9 @@ const migrateLeads = async () => {
         if (!exist || !exist.id) {
             let newLead = await createSimpleLead(lead)
             console.log('new opportunity: ', newLead && newLead.name)
+        } else {
+            await updateLeadActivities(lead)
+            return
         }
         console.log(index++)
     }
