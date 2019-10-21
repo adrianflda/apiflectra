@@ -283,7 +283,7 @@ const oldDeployData = {
 const oldFlectra = new Flectra(oldDeployData)
 const newFlectra = new Flectra(newDeployData)
 
-const formatClient = (partner) => {
+const createClient = async (partner) => {
     let {
         name,
         email,
@@ -310,6 +310,8 @@ const formatClient = (partner) => {
         company_type: 'person'
     }
 
+    let id = await newFlectra.createElement({}, 'res.partner', newPartner)
+    newPartner.id = id
     return newPartner
 }
 
@@ -368,9 +370,19 @@ const createLead = async (lead) => {
     let user = user_id && user_id[0] && await oldFlectra.readElement('res.users', [['id', '=', user_id[0]]], ['login'], 0, 1)
     let newUser = user && user.login && await newFlectra.readElement('res.users', [['login', '=', user.login]], ['id'], 0, 1)
 
-    let partner = partner_id && partner_id[0] && await oldFlectra.readElement('res.partner', [['id', '=', partner_id[0]]], ['name', 'phone'], 0, 1)
+    let partner = partner_id && partner_id[0] && await oldFlectra.readElement('res.partner', [['id', '=', partner_id[0]]], [
+        'name',
+        'email',
+        'phone',
+        'mobile',
+        'street',
+        'street2',
+        'city',
+        'country_id'], 0, 1)
     let newPartner = partner && partner.name && await newFlectra.readElement('res.partner', [['name', '=', partner.name], ['phone', '=', partner.phone]], ['id'], 0, 1)
-
+    if (!newPartner) {
+        newPartner = await createClient(partner)
+    }
     let stage = stage_id && stage_id[0] && await oldFlectra.readElement('crm.stage', [['id', '=', stage_id[0]]], ['name'], 0, 1)
     let newStage = stage && stage.name && await newFlectra.readElement('crm.stage', [['name', '=', stage.name]], ['id'], 0, 1)
 
@@ -397,7 +409,7 @@ const createLead = async (lead) => {
         activity_type_id: activity_type_id && activity_type_id[0]
     }
 
-    let res_id = await newFlectra.createElement({default_type: 'opportunity'}, 'crm.lead', newLead)
+    let res_id = await newFlectra.createElement({ default_type: 'opportunity' }, 'crm.lead', newLead)
     newLead.id = res_id
 
     await createActivity({ activity_date_deadline, activity_summary, activity_type_id, activity_user_id, res_id })
