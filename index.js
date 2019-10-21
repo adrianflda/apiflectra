@@ -331,27 +331,40 @@ const createUser = async (user) => {
     return newUser
 }
 
-const createActivity = async (activity) => {
-    let {
-        activity_date_deadline,
-        activity_summary,
-        activity_type_id,
-        activity_user_id,
-        res_id
-    } = activity
+const createActivities = async (lead = {}, activities = []) => {
+    activities = await oldFlectra.readElement('mail.activity', [['id', 'in', activities]])
+    let index = 0
+    while (index < activities.length) {
+        let activity = activities[index]
 
-    let newActivity = {
-        activity_type_id,
-        summary: activity_summary,
-        date_deadline: activity_date_deadline,
-        user_id: activity_user_id,
-        note,
-        res_model: 'crm-lead',
-        res_model_id: 166,
-        res_id
+        let {
+            name,
+            activity_category,
+            activity_type_id,
+            summary,
+            date_deadline,
+            user_id,
+            note,
+            res_model,
+            res_model_id,
+            res_id
+        } = activity
+
+        let newActivity = {
+            activity_type_id,
+            summary: activity_summary,
+            date_deadline: activity_date_deadline,
+            user_id: activity_user_id,
+            note: activity_summary,
+            res_model: 'crm-lead',
+            res_model_id: 166,
+            res_id
+        }
+
+        await newFlectra.createElement({}, 'mail.activity', newActivity)
+        index++
+        console.log('activity: ', index, lead.name, a)
     }
-
-    return await newFlectra.createElement({}, 'mail.activity', newActivity)
 }
 
 const createLead = async (lead) => {
@@ -431,13 +444,80 @@ const createLead = async (lead) => {
     let res_id = await newFlectra.createElement({ default_type: 'opportunity' }, 'crm.lead', newLead)
     newLead.id = res_id
 
-    await createActivity({
+    await createActivities(activity_ids)
+    return newLead
+}
+
+const createSimpleLead = async (lead) => {
+    let {
+        name,
+        mobile,
+        phone,
+        email_from,
+        priority,
+        x_sourse_notes,
+        notes,
+        street,
+        street2,
+        city,
+        country_id,
+        partner_id,
+        user_id,
+        team_id,
+        stage_id,
+        color
+    } = lead
+
+    let user = user_id && user_id[0] && await oldFlectra.readElement('res.users', [['id', '=', user_id[0]]], ['name', 'login'], 0, 1)
+    let newUser = user && user.login && await newFlectra.readElement('res.users', [['login', '=', user.login]], ['id'], 0, 1)
+    if (!newUser && user) {
+        let id = await newFlectra.createElement({}, 'res.users', user)
+        newUser = {
+            ...user,
+            id
+        }
+    }
+
+    let partner = partner_id && partner_id[0] && await oldFlectra.readElement('res.partner', [['id', '=', partner_id[0]]], [
+        'name',
+        'email',
+        'phone',
+        'mobile',
+        'street',
+        'street2',
+        'city',
+        'country_id'], 0, 1)
+    let newPartner = partner && partner.name && await newFlectra.readElement('res.partner', [['name', '=', partner.name], ['phone', '=', partner.phone]], ['id'], 0, 1)
+    if (!newPartner) {
+        newPartner = await createClient(partner)
+    }
+    let stage = stage_id && stage_id[0] && await oldFlectra.readElement('crm.stage', [['id', '=', stage_id[0]]], ['name'], 0, 1)
+    let newStage = stage && stage.name && await newFlectra.readElement('crm.stage', [['name', '=', stage.name]], ['id'], 0, 1)
+
+    let newLead = {
+        name,
+        mobile,
+        phone,
+        email_from,
+        priority,
+        street,
+        street2,
+        city,
+        country_id: country_id && country_id[0],
+        partner_id: newPartner.id,
+        user_id: newUser && newUser.id,
+        team_id: 4,
+        stage_id: newStage.id,
+        notes: notes + ' \n ' + x_sourse_notes,
+        color,
+        activity_summary,
+        activity_state,
         activity_date_deadline,
-        activity_summary, 
-        activity_type_id: activity_type_id[0], 
-        activity_user_id: newUser.id, 
-        res_id
-    })
+        activity_type_id: activity_type_id && activity_type_id[0]
+    }
+
+    let res_id = await newFlectra.createElement({ default_type: 'opportunity' }, 'crm.lead', newLead)
+    newLead.id = res_id
     return newLead
 }
 
@@ -469,7 +549,7 @@ const migrateLeads = async () => {
         let lead = leads[index]
         let exist = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id'], 0, 1)
         if (!exist || !exist.id) {
-            let newLead = await createLead(lead)
+            let newLead = await createSimpleLead(lead)
             console.log('new opportunity: ', newLead && newLead.name)
         }
         index++
