@@ -3,24 +3,7 @@ require('dotenv').config()
 const Flectra = require('./flectra');
 const { processXLSXFiles } = require('./file')
 
-const deployData = {
-    "url": process.env.URL,
-    "port": process.env.PORT,
-    "db": process.env.DB,
-    "username": process.env.USER_NAME,
-    "password": process.env.PASSWORD
-}
 
-/**
- * Deploy data url, port, db, username, passowrd
- */
-const olddeployData = {
-    "url": process.env.oldURL,
-    "port": process.env.oldPORT,
-    "db": process.env.oldDB,
-    "username": process.env.oldUSER_NAME,
-    "password": process.env.oldPASSWORD
-}
 
 const crudLeads = async () => {
     try {
@@ -279,7 +262,26 @@ const getLeads = async () => {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const oldFlectra = new Flectra(deployData)
+const newDeployData = {
+    "url": process.env.URL,
+    "port": process.env.PORT,
+    "db": process.env.DB,
+    "username": process.env.USER_NAME,
+    "password": process.env.PASSWORD
+}
+
+/**
+ * Deploy data url, port, db, username, passowrd
+ */
+const oldDeployData = {
+    "url": process.env.oldURL,
+    "port": process.env.oldPORT,
+    "db": process.env.oldDB,
+    "username": process.env.oldUSER_NAME,
+    "password": process.env.oldPASSWORD
+}
+const oldFlectra = new Flectra(oldDeployData)
+const newFlectra = new Flectra(newDeployData)
 
 const init = async (flectra) => {
     flectra && await flectra.connect()
@@ -334,7 +336,8 @@ const getCustomers = async (oldFlectra, newFlectra) => {
 
 const main = async () => {
     await init(oldFlectra)
-    getCustomers(oldFlectra)
+    await init(newFlectra)
+    getCustomers(oldFlectra, newFlectra)
 }
 
 main()
