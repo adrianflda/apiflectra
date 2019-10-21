@@ -255,7 +255,7 @@ const getLeads = async () => {
     while (index < leads.length && index < 10) {
         let lead = leads[index]
         console.log(lead.name)
-        let result = await main.updateElement('crm.lead',{id:lead.id, team_id: false, user_id: false} )
+        let result = await main.updateElement('crm.lead', { id: lead.id, team_id: false, user_id: false })
         console.log(result)
         index++
     }
@@ -313,6 +313,41 @@ const formatClient = (partner) => {
     return newPartner
 }
 
+const formatLead = (lead) => {
+    let {
+        name,
+        partner_id,
+        user_id,
+        mobile,
+        phone,
+        email_from,
+        priority,
+        x_sourse_notes,
+        street,
+        street2,
+        city,
+        country_id,
+    } = lead
+
+    let newLead = {
+        name,
+        partner_id,
+        user_id,
+        mobile,
+        phone,
+        email_from,
+        priority,
+        x_sourse_notes,
+        street,
+        street2,
+        city,
+        country_id: country_id && country_id[0],
+        notes: x_sourse_notes
+    }
+
+    return newLead
+}
+
 const getCustomers = async (oldFlectra, newFlectra) => {
     let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
     let index = 0
@@ -320,10 +355,12 @@ const getCustomers = async (oldFlectra, newFlectra) => {
         let lead = leads[index]
         console.log(lead.partner_id)
         let partner_id = lead.partner_id[0]
-        let partner = await oldFlectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
-        let newPartner = formatClient(partner)
-        let result = await newFlectra.createElement({}, 'res.partner', newPartner) 
-        console.log(result)
+        if (partner_id) {
+            let partner = await oldFlectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
+            let newPartner = formatClient(partner)
+            let result = await newFlectra.createElement({}, 'res.partner', newPartner)
+            console.log(result)
+        }
         index++
     }
 }
