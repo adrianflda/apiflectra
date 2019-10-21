@@ -11,6 +11,17 @@ const deployData = {
     "password": process.env.PASSWORD
 }
 
+/**
+ * Deploy data url, port, db, username, passowrd
+ */
+const olddeployData = {
+    "url": process.env.oldURL,
+    "port": process.env.oldPORT,
+    "db": process.env.oldDB,
+    "username": process.env.oldUSER_NAME,
+    "password": process.env.oldPASSWORD
+}
+
 const crudLeads = async () => {
     try {
         let main = new Flectra(deployData)
@@ -179,22 +190,6 @@ const processXLSXToLeads = async () => {
     }
 }
 
-const getLeads = async () => {
-    let main = new Flectra(deployData)
-    await main.connect()
-    let leads = await main.readElement('crm.lead', [['name', 'ilike', 'test-VR-TP-MTY']], 0, 0, 100)
-    let index = 0
-    while (index < leads.length && index < 10) {
-        let lead = leads[index]
-        console.log(lead.name)
-        let result = await main.updateElement('crm.lead',{id:lead.id, team_id: false, user_id: false} )
-        console.log(result)
-        index++
-    }
-}
-
-getLeads()
-
 const updateClient = async (main, lead) => {
     let client = processContact(lead)
     let partner = await main.readElement('res.partner', [['mobile', '=', client.mobile], ['name', '=', client.name]], ['id'], 0, 1)
@@ -264,6 +259,57 @@ const assignLeadsToAgent = async (from, to) => {
             console.log(lead)
             await main.updateElement('crm.lead', { id: lead.id, team_id: 118 })
         }
+        index++
+    }
+}
+
+
+const getLeads = async () => {
+    let main = new Flectra(deployData)
+    await main.connect()
+    let leads = await main.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], 0, 0, 0)
+    let index = 0
+    while (index < leads.length && index < 10) {
+        let lead = leads[index]
+        console.log(lead.name)
+        let result = await main.updateElement('crm.lead',{id:lead.id, team_id: false, user_id: false} )
+        console.log(result)
+        index++
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const main = new Flectra(deployData)
+main.connect()
+
+const createClient = async (partner) => {
+    let {
+        name,
+        email,
+        phone,
+        mobile,
+        street,
+        street2,
+        city,
+        country,
+        company_type
+    } = partner
+
+    let newPartner = {
+
+    }
+}
+
+const getCustomers = async () => {
+    let leads = await main.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY']], ['id', 'partner_id'], 0, 0)
+    let index = 0
+    while (index < leads.length) {
+        let lead = leads[index]
+        console.log(lead.partner_id)
+        let partner_id = lead.partner_id[0]
+        let partner = await main.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
+        console.log(partner)
+        // await createClient(partner)
         index++
     }
 }
