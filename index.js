@@ -326,7 +326,7 @@ const getCustomers = async (oldFlectra, newFlectra) => {
         let partner_id = lead.partner_id[0]
         let partner = await oldFlectra.readElement('res.partner', [['id', '=', partner_id]], 0, 0, 1)
         let newPartner = formatClient(partner)
-        let result = await newFlectra.createElement('res.partner', newPartner) 
+        let result = await newFlectra.createElement({}, 'res.partner', newPartner) 
         console.log(result)
         index++
     }
