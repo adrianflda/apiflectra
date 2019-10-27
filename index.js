@@ -283,6 +283,61 @@ const oldDeployData = {
 const oldFlectra = new Flectra(oldDeployData)
 const newFlectra = new Flectra(newDeployData)
 
+
+const formatNotes = async (lead) => {
+    let oldLead = {
+        x_login_id: "Login",
+
+        x_email1: "Email1",
+
+        x_email2: "Email2",
+
+        x_office_phone: "Office phone",
+
+        x_membership: "Membresia",
+
+        x_club_name: "Club name",
+
+        x_lang: "Languaje",
+
+        x_password: "Password",
+
+        x_first_name_cotitular: "Cootitular's firt name",
+
+        x_last_name_cotitular: "Cootitular's last name",
+
+        x_date_purchased: "Purchased date",
+
+        x_currency_reservations: "Currency of reservation",
+
+        x_last_visit: "Last visit",
+
+        x_first_visit_system: "First visit",
+
+        x_date_acceptance_terms_conditions: "Date of acceptance terms and conditions",
+
+        x_update_month_renovation: "Month of renovation",
+
+        x_registration: "Date of registration",
+
+        x_terms_conditions: "Terms and conditions",
+
+        x_club_active: "Club active",
+
+        x_sources_note: "Source's notes",
+
+        x_membership_active: "Membership active",
+    }
+
+    let x_sources_note = ''
+
+    for (let field in oldLead) {
+        x_sources_note += `${oldLead[field]}: ${lead[field]}` + '\n'
+    }
+
+    return x_sources_note
+}
+
 const createClient = async (partner) => {
     let {
         name,
@@ -461,8 +516,19 @@ const createSimpleLead = async (lead) => {
     if (!newPartner) {
         newPartner = await createClient(partner)
     }
+
+    console.log('stage_id:', stage_id)
     let stage = stage_id && stage_id[0] && await oldFlectra.readElement('crm.stage', [['id', '=', stage_id[0]]], ['name'], 0, 1)
+    console.log('stage:', stage)
     let newStage = stage && stage.name && await newFlectra.readElement('crm.stage', [['name', '=', stage.name]], ['id'], 0, 1)
+    if (!newStage) {
+        let element = {
+            ...stage
+        }
+        delete element.id
+        newStage = await newFlectra.createElement({}, 'crm.stage', element)
+    }
+    console.log('newstage:', newStage)
 
     let newLead = {
         name,
@@ -662,7 +728,7 @@ const summary_ids = {
     'Empty summary': 7
 }
 
-const updatePhoneCalls = async (lead, phonecall_ids) => {
+const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
     let phonecalls = await oldFlectra.readElement('crm.phonecall', [['id', 'in', phonecall_ids]], 0, 0, 0)
     let index = 0
     while (index < phonecalls.length) {
@@ -672,24 +738,30 @@ const updatePhoneCalls = async (lead, phonecall_ids) => {
             x_subject,
         } = phonecall
 
-        console.log(summary_ids, x_subject, summary_ids[x_subject])
+        x_subject = (isFisrtFlectra)? x_subject : name
 
-        let newPhonecall = {
-            description: name,
-            name: x_subject,
-            summary_id: (x_subject) ? summary_ids[x_subject] : 7,
-            partner_id: lead.partner_id[0],
-            opportunity_id: lead.id,
-            user_id: lead.user_id[0],
+        console.log(summary_ids, x_subject, summary_ids[x_subject], name, summary_ids[name])
+        if (summary_ids[x_subject]) {
+            let newSummary = await newFlectra.readElement('crm.phonecall.summary', [['name', '=', x_subject]], ['id'], 0, 1)
+
+            let newPhonecall = {
+                description: name,
+                name: x_subject,
+                summary_id: newSummary && newSummary.id,
+                partner_id: lead.partner_id[0],
+                opportunity_id: lead.id,
+                user_id: lead.user_id[0],
+            }
+
+            await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
+            console.log('phonecall: ', index++, phonecall)
         }
-
-        await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
-        console.log('phonecall: ', index++, phonecall)
+        index++
     }
 }
 
 const migrateLeads = async () => {
-    let leads = await oldFlectra.readElement('crm.lead', [['name', 'ilike', 'VR-TP-MTY'], ['type', '=', 'opportunity']], 0, 0, 0)
+    let leads = await oldFlectra.readElement('crm.lead', [], 0, 0, 0)
     let index = 0
 
     while (index < leads.length) {
@@ -724,12 +796,55 @@ const updateLeads = async () => {
     }
 }
 
+const loadCRMPhonecallSummary = async () => {
+    let summarys = await oldFlectra.readElement('crm.phonecall.summary', [], ['name'], 0, 0)
+    console.log(summarys)
+    summarys.forEach(async summary => {
+        let exist = await newFlectra.readElement('crm.phonecall.summary', [['name', '=', summary.name]], ['name'], 0, 1)
+        console.log('exist summary:', exist)
+        if (!exist) {
+            await newFlectra.createElement({}, 'crm.phonecall.summary', {name: summary.name})
+        }
+    })
+}
+
+const loadCRMStages = async () => {
+    let stages = await oldFlectra.readElement('crm.stage', [], 0, 0, 0)
+    console.log(stages)
+    stages.forEach(async stage => {
+        let exist = await newFlectra.readElement('crm.stage', [['name', '=', stage.name]], ['name'], 0, 1)
+        if (!exist) {
+            let newStage = {
+                name: stage.name,
+                team_id: stage.team_id && stage.team_id[0],
+                on_change: stage.on_change,
+                probability: stage.on_change && stage.probability,
+                fold: stage.fold,
+                requirements: stage.requirements
+            }
+            await newFlectra.createElement({}, 'crm.stage', newStage)
+        }
+    })
+}
+
+const updateNotes = async () => {
+
+}
+
+const loadUsers = async () => {
+    let users = await oldFlectra.readElement('res.users', [], 0, 0, 0)
+
+}
+
+
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
-    //await getCustomers()
-    //migrateLeads()
-    updateLeads()
+    //await loadCRMPhonecallSummary()
+    //await loadCRMStages()
+
+    migrateLeads()
+    //updateLeads()
 }
 
 main()
