@@ -496,6 +496,7 @@ const createSimpleLead = async (lead) => {
     let user = user_id && user_id[0] && await oldFlectra.readElement('res.users', [['id', '=', user_id[0]]], ['name', 'login'], 0, 1)
     let newUser = user && user.login && await newFlectra.readElement('res.users', [['login', '=', user.login]], ['id'], 0, 1)
     if (!newUser && user) {
+        user.customer = false
         let id = await newFlectra.createElement({}, 'res.users', user)
         newUser = {
             ...user,
