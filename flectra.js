@@ -94,10 +94,10 @@ class Flectra {
     execute_kw(model, method, params) {
         return new Promise((resolve, reject) => {
             if (this.flectra) {
-                console.log('execute_kw: ', model, method, params)
+                console.log('execute_kw: ', model, method, JSON.stringify(params))
                 this.flectra.execute_kw(model, method, params, (err, value) => {
-                    console.log('execute_kw result')
                     if (err) {
+                        console.log('execute_kw fail: ', model, method, JSON.stringify(params), err)
                         reject(err)
                         return
                     }

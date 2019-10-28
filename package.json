@@ -23,8 +23,8 @@
   "homepage": "https://github.com/adrianflda/apiflectra#readme",
   "dependencies": {
     "async-sema": "^3.0.1",
-    "cote": "^0.21.1",
     "convert-excel-to-json": "^1.6.1",
+    "cote": "^0.21.1",
     "csvtojson": "^2.0.10",
     "dotenv": "^8.1.0",
     "files-list": "^1.4.1",
