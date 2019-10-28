@@ -437,7 +437,7 @@ const createStage = async (stage) => {
         requirements
     } = stage
 
-    let newTeam = await createIfNotExistTeam({ old_team_id: team_id })
+    let newTeam = await createIfNotExistTeam({ old_team_id: team_id[0] })
 
     let newStage = {
         name,
@@ -745,6 +745,46 @@ const createActivity = async (lead, activity = {}) => {
     return newActivity
 }
 
+const createPhonecall = async (call) => {
+    let {
+        description,
+        name,
+        partner_id,
+        user_id,
+        opportunity_id,
+        summary_id
+    } = call
+
+    let newUser = user_id && await createIfNotExistUser({ old_user_id: user_id[0] })
+    let newPartner = partner_id && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
+    let newLead = opportunity_id && await createIfNotExistLead({ old_lead_id: opportunity_id[0] })
+    let newSummary = name && await newFlectra.readElement('crm.phonecall.summary', [['name', '=', name]], 0, 0, 1)
+
+    let newCall = old_call && old_call.name && await newFlectra.readElement('crm.phonecall', [
+        ['name', '=', name],
+        ['description', '=', description],
+        ['summary_id', '=', newSummary && newSummary.id],
+        ['partner_id', '=', newPartner && newPartner.id],
+        ['opportunity_id', '=', newLead && newLead.id]
+    ], ['id'], 0, 1)
+
+    if (newCall && newCall.id) {
+        return newCall
+    }
+
+    let newPhonecall = {
+        description,
+        name,
+        summary_id: newSummary && newSummary.id,
+        partner_id: newPartner && newPartner.id,
+        opportunity_id: newLead && newLead.id,
+        user_id: newUser && newUser.id
+    }
+
+    newPhonecall.id = await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
+    return newPhonecall
+}
+
 ///////////////////////////////////////////////////////////// GET ///////////////////////////////////////////////////////////////////
 
 const createIfNotExistUser = async ({ old_user_id, old_user }) => {
@@ -864,22 +904,37 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
         let phonecall = phonecalls[index]
         let {
             name,
+            description,
             x_subject,
+            date,
         } = phonecall
 
         x_subject = (isFisrtFlectra) ? x_subject : name
+
+        let newPhonecall = await newFlectra.readElement('crm.phonecall', [
+            ['name', '=', name],
+            ['description', '=', description],
+            ['partner_id', '=', lead.partner_id && lead.partner_id[0]],
+            ['user_id', '=', lead.user_id && lead.user_id[0]],
+            ['date', '=', date]
+        ], 0, 0, 1)
+
+        if (newPhonecall) {
+            return newPhonecall
+        }
 
         console.log(summary_ids, x_subject, summary_ids[x_subject], name, summary_ids[name])
         if (summary_ids[x_subject]) {
             let newSummary = await newFlectra.readElement('crm.phonecall.summary', [['name', '=', x_subject]], ['id'], 0, 1)
 
             let newPhonecall = {
-                description: name,
+                description,
                 name: x_subject,
                 summary_id: newSummary && newSummary.id,
                 partner_id: lead.partner_id && lead.partner_id[0],
                 opportunity_id: lead.id,
                 user_id: lead.user_id[0],
+                date
             }
 
             await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
@@ -904,23 +959,28 @@ const updateLeads = async (filter = []) => {
 
 /////////////////////////////////////////////////////////////// LOAD /////////////////////////////////////////////////////////////////////////////
 const loadMessages = async () => {
-    let messages = await oldFlectra.readElement('mail.message', [], 0, 0, 0)
-
-    let index = 0
-    while (index < messages.length) {
-        let message = messages[index]
-        setTimeout(async () => {
+    let leads = await oldFlectra.readElement('crm.lead', [])
+    let leadIndex = 0
+    while (leadIndex < leads.length) {
+        let lead = leads[leadIndex]
+        let message_ids = lead.message_ids
+        let messages = await oldFlectra.readElement('mail.message', [['id', 'in', message_ids]])
+        
+        let index = 0
+        while (index < messages.length) {
+            let message = messages[index]
             await s.acquire()
             try {
                 console.log(s.nrWaiting() + ' calls to createIfNotExistMessage are waiting')
                 await createIfNotExistMessage({ old_message: message })
-
+    
             } finally {
                 s.release();
             }
-        }, index + 100)
-        index++
-        console.log('message: ', index)
+            index++
+            console.log('message: ', index)
+        }
+        leadIndex++
     }
 }
 
@@ -949,6 +1009,18 @@ const loadCRMPhonecallSummary = async () => {
             await newFlectra.createElement({}, 'crm.phonecall.summary', { name: summary.name })
         }
     })
+}
+
+const loadPhoneCalls = async () => {
+    let leads = await oldFlectra.readElement('crm.lead', [])
+    let index = 592
+    while (index > 300) {
+        let lead = leads[index]
+        let newLead = await createIfNotExistLead({ old_lead: lead })
+        await updatePhoneCalls(newLead, lead.phonecall_ids)
+        index--
+        console.log(index)
+    }
 }
 
 const loadCRMStages = async () => {
@@ -994,12 +1066,13 @@ const loadPartners = async () => {
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
-    await loadCRMPhonecallSummary()   //1
-    await loadCRMStages()             //2
-    await loadUsers()                 //3
-    await loadCRMTeams()              //4
-    await loadPartners()              //5
-    await loadCRMLeads()              //6
+    //await loadCRMPhonecallSummary()   //1
+    //await loadCRMStages()             //2
+    //await loadUsers()                 //3
+    //await loadCRMTeams()              //4
+    //await loadPartners()              //5
+    //await loadCRMLeads()              //6
+    //await loadPhoneCalls()
     await loadMessages()
 }
 
