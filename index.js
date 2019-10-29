@@ -494,8 +494,6 @@ const createLead = async (lead) => {
 
     description = '\n\n' + formatNotes(lead)
 
-    console.log('description: ', description)
-
     let newUser = Array.isArray(user_id) && await createIfNotExistUser({ old_user_id: user_id[0] })
     let newPartner = Array.isArray(partner_id) && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
     let newTeam = Array.isArray(team_id) && await createIfNotExistTeam({ old_team_id: team_id[0] })
@@ -506,7 +504,7 @@ const createLead = async (lead) => {
         mobile,
         phone,
         email_from,
-        contact_name,
+        contact_name: contact_name.replaceAll('undefined', ''),
         partner_name,
         priority,
         street,
