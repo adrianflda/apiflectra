@@ -960,14 +960,23 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
     }
 }
 
-const updateLeads = async (filter = []) => {
-    let leads = await newFlectra.readElement('crm.lead', filter, 0, 0, 0)
+const updateLeads = async (leads) => {
     leads.forEach(async lead => {
-        let newLead = await newFlectra.readElement('crm.lead', [['name', '=', lead.name]], ['id', 'user_id', 'partner_id'], 0, 1)
-        if (newLead && newLead.id) {
-            await updatePhoneCalls(newLead, lead.phonecall_ids)
-            await updateLeadActivities(newLead, lead.activity_ids)
-            //await updateNotes()
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to updatelead are waiting')
+            let newLead = await createIfNotExistLead({ old_lead: lead })
+            if (newLead && (!newLead.contact_name || !newLead.partner_id)) {
+                let newPartner = await createIfNotExistPartner({ old_partner_id: lead.partner_id && lead.partner_id[0] })
+                let leadForUpdate = {
+                    id: newLead.id,
+                    partner_id: newPartner.id,
+                    contact_name: lead.contact_name
+                }
+                await newFlectra.updateElement('crm.lead', leadForUpdate)
+            }
+        } finally {
+            s.release();
         }
     })
 }
@@ -1103,6 +1112,10 @@ const certopiaFilter = [
     ['name', 'like', 'CERTIFICADO']
 ]
 
+const referidosFilter = [
+    ['name', 'like', 'REFERIDO']
+]
+
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
@@ -1117,6 +1130,7 @@ const main = async () => {
     //await loadMessages(filter)
     await workWithThis('crm.lead', filter, loadCRMLeads)
     await workWithThis('crm.lead', filter, loadMessages)
+    await workWithThis('crm.lead', referidosFilter, updateLeads)
 }
 
 main()
