@@ -290,59 +290,63 @@ const oldDeployData = {
 const oldFlectra = new Flectra(oldDeployData)
 const newFlectra = new Flectra(newDeployData)
 
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
 
-const formatNotes = async (lead) => {
+const formatNotes = (lead) => {
+    lead.x_currency_reservations = (lead.x_currency_reservations === 0 || lead.x_currency_reservations === '0')? 'MX' : 'USD'
+
     let oldLead = {
         x_login_id: "Login",
-
         x_email1: "Email1",
-
         x_email2: "Email2",
-
         x_office_phone: "Office phone",
-
         x_membership: "Membresia",
-
         x_club_name: "Club name",
-
         x_lang: "Languaje",
-
         x_password: "Password",
-
         x_first_name_cotitular: "Cootitular's firt name",
-
         x_last_name_cotitular: "Cootitular's last name",
-
         x_date_purchased: "Purchased date",
-
         x_currency_reservations: "Currency of reservation",
-
         x_last_visit: "Last visit",
-
         x_first_visit_system: "First visit",
-
         x_date_acceptance_terms_conditions: "Date of acceptance terms and conditions",
-
         x_update_month_renovation: "Month of renovation",
-
         x_registration: "Date of registration",
-
         x_terms_conditions: "Terms and conditions",
-
         x_club_active: "Club active",
-
         x_sources_note: "Source's notes",
-
         x_membership_active: "Membership active",
+        x_comments: "Comments",
+        x_years_purchased: "Purchased years",   
+        x_sales_person: "Sales person", 
+        x_purchased_price: "Purchased price",
+        x_number_weeks_year: "Number of weeks for year",
+        x_vacancy_rewards_dr: "Rewards DR",
+        x_condo_rewards: "Condo",
+        x_tours_traslados_rewards: "Tours",
+        x_yates_rewards: "Yates",
+        x_currency_reservations: "Currency",
+        x_hot_weeks: "Hot weeks",
+        x_club_399: "Club399",
+        x_vacancy_rewards: "Vacancy rewards",
+        x_cruises: "Cruises",
+        x_cars: "Cars",
+        x_air: "Air",
+        x_mexico: "In Mexico",
+        x_golf: "Golf",
+        description: "Description",
+        comment: "Comment"
     }
-
     let x_sources_note = ''
 
     for (let field in oldLead) {
-        x_sources_note += `${oldLead[field]}: ${lead[field]}` + '\n'
+        x_sources_note += (lead[field] && lead[field] !== 'undefined') ? `${oldLead[field]}: ${lead[field]}` + '\n' : ''
     }
-
-    return x_sources_note
+    return x_sources_note.replaceAll('undefined', ' empty field ')
 }
 
 ///////////////////////////////////////////////////////////////////// CREATE ////////////////////////////////////////////////////////////////
@@ -356,8 +360,11 @@ const createClient = async (partner) => {
         street,
         street2,
         city,
-        country_id
+        country_id,
+        comment
     } = partner
+
+    comment = '\n\n' + formatNotes(partner)
 
     let newPartner = {
         name: name || 'empty field',
@@ -371,7 +378,8 @@ const createClient = async (partner) => {
         employee: false,
         customer: true,
         type: 'contact',
-        company_type: 'person'
+        company_type: 'person',
+        comment
     }
 
     newPartner.id = await newFlectra.createElement({}, 'res.partner', newPartner) || false
@@ -470,6 +478,8 @@ const createLead = async (lead) => {
         city,
         country_id,
         partner_id,
+        partner_name,
+        contact_name,
         user_id,
         team_id,
         stage_id,
@@ -478,8 +488,13 @@ const createLead = async (lead) => {
         activity_state,
         activity_date_deadline,
         activity_type_id,
-        type
+        type,
+        description
     } = lead
+
+    description = '\n\n' + formatNotes(lead)
+
+    console.log('description: ', description)
 
     let newUser = Array.isArray(user_id) && await createIfNotExistUser({ old_user_id: user_id[0] })
     let newPartner = Array.isArray(partner_id) && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
@@ -491,6 +506,8 @@ const createLead = async (lead) => {
         mobile,
         phone,
         email_from,
+        contact_name,
+        partner_name,
         priority,
         street,
         street2,
@@ -505,7 +522,8 @@ const createLead = async (lead) => {
         activity_summary,
         activity_state,
         activity_date_deadline,
-        activity_type_id: activity_type_id && activity_type_id[0]
+        activity_type_id: activity_type_id && activity_type_id[0],
+        description
     }
 
     newLead.id = await newFlectra.createElement({ default_type: type }, 'crm.lead', newLead) || false
@@ -965,7 +983,7 @@ const loadMessages = async () => {
         let lead = leads[leadIndex]
         let message_ids = lead.message_ids
         let messages = await oldFlectra.readElement('mail.message', [['id', 'in', message_ids]])
-        
+
         let index = 0
         while (index < messages.length) {
             let message = messages[index]
@@ -973,7 +991,7 @@ const loadMessages = async () => {
             try {
                 console.log(s.nrWaiting() + ' calls to createIfNotExistMessage are waiting')
                 await createIfNotExistMessage({ old_message: message })
-    
+
             } finally {
                 s.release();
             }
@@ -984,8 +1002,8 @@ const loadMessages = async () => {
     }
 }
 
-const loadCRMLeads = async () => {
-    let leads = await oldFlectra.readElement('crm.lead', [], 0, 0, 0)
+const loadCRMLeads = async (filter = []) => {
+    let leads = await oldFlectra.readElement('crm.lead', filter, 0, 0, 10)
     leads.forEach(async lead => {
         await s.acquire()
         try {
@@ -1063,6 +1081,14 @@ const loadPartners = async () => {
     })
 }
 
+const luisFilter = [
+    []
+]
+
+const certopiaFilter = [
+    ['name', 'like', 'CERTIFICADO']
+]
+
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
@@ -1071,9 +1097,9 @@ const main = async () => {
     //await loadUsers()                 //3
     //await loadCRMTeams()              //4
     //await loadPartners()              //5
-    //await loadCRMLeads()              //6
+    await loadCRMLeads(certopiaFilter)              //6
     //await loadPhoneCalls()
-    await loadMessages()
+    //await loadMessages()
 }
 
 main()
