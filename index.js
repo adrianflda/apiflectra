@@ -974,8 +974,7 @@ const updateLeads = async (filter = []) => {
 
 
 /////////////////////////////////////////////////////////////// LOAD /////////////////////////////////////////////////////////////////////////////
-const loadMessages = async () => {
-    let leads = await oldFlectra.readElement('crm.lead', [])
+const loadMessages = async (leads = []) => {
     let leadIndex = 0
     while (leadIndex < leads.length) {
         let lead = leads[leadIndex]
@@ -1000,28 +999,20 @@ const loadMessages = async () => {
     }
 }
 
-const loadCRMLeads = async (filter = []) => {
-    let start = 0
-    let amount = 100
-    let flag = true
-    while (flag) {
-        let leads = await oldFlectra.readElement('crm.lead', filter, 0, start, amount)
-        leads.forEach(async lead => {
-            await s.acquire()
-            try {
-                console.log(s.nrWaiting() + ' calls to createIfNotExistLead are waiting')
-                let newLead = await createIfNotExistLead({ old_lead: lead })
-                if (newLead && newLead.id) {
-                    await updatePhoneCalls(newLead, lead.phonecall_ids)
-                    await updateLeadActivities(newLead, lead.activity_ids)
-                }
-            } finally {
-                s.release();
+const loadCRMLeads = async (leads = []) => {
+    leads.forEach(async lead => {
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to createIfNotExistLead are waiting')
+            let newLead = await createIfNotExistLead({ old_lead: lead })
+            if (newLead && newLead.id) {
+                await updatePhoneCalls(newLead, lead.phonecall_ids)
+                await updateLeadActivities(newLead, lead.activity_ids)
             }
-        })
-        flag = leads.length > 0
-        start+=amount
-    }
+        } finally {
+            s.release();
+        }
+    })
 }
 
 const loadCRMPhonecallSummary = async () => {
@@ -1086,8 +1077,26 @@ const loadPartners = async () => {
     })
 }
 
+const workWithThis = async (model, filter = [], callback) => {
+    let start = 0
+    let amount = 100
+    let flag = true
+    while (flag) {
+        await s.acquire()
+        try {
+            let elements = await oldFlectra.readElement(model, filter, 0, start, amount)
+            console.log(s.nrWaiting() + ` calls to workWithThis ${model} filter: ${filter} are waiting`)
+            await callback(elements)
+            flag = elements.length > 0
+            start += amount
+        } finally {
+            s.release();
+        }
+    }
+}
+
 const luisFilter = [
-    []
+    ['team_id', 'in', [3, 19, 14, 18, 17]]
 ]
 
 const certopiaFilter = [
@@ -1097,14 +1106,17 @@ const certopiaFilter = [
 const main = async () => {
     await oldFlectra.connect(oldDeployData)
     await newFlectra.connect(newDeployData)
+    let filter = luisFilter
     //await loadCRMPhonecallSummary()   //1
     //await loadCRMStages()             //2
     //await loadUsers()                 //3
     //await loadCRMTeams()              //4
     //await loadPartners()              //5
-    await loadCRMLeads(certopiaFilter)              //6
+    //await loadCRMLeads(filter)              //6
     //await loadPhoneCalls()
-    //await loadMessages()
+    //await loadMessages(filter)
+    await workWithThis('crm.lead', filter, loadCRMLeads)
+    await workWithThis('crm.lead', filter, loadMessages)
 }
 
 main()
