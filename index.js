@@ -290,13 +290,13 @@ const oldDeployData = {
 const oldFlectra = new Flectra(oldDeployData)
 const newFlectra = new Flectra(newDeployData)
 
-String.prototype.replaceAll = function(search, replacement) {
+String.prototype.replaceAll = function (search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 
 const formatNotes = (lead) => {
-    lead.x_currency_reservations = (lead.x_currency_reservations === 0 || lead.x_currency_reservations === '0')? 'MX' : 'USD'
+    lead.x_currency_reservations = (lead.x_currency_reservations === 0 || lead.x_currency_reservations === '0') ? 'MX' : 'USD'
 
     let oldLead = {
         x_login_id: "Login",
@@ -321,8 +321,8 @@ const formatNotes = (lead) => {
         x_sources_note: "Source's notes",
         x_membership_active: "Membership active",
         x_comments: "Comments",
-        x_years_purchased: "Purchased years",   
-        x_sales_person: "Sales person", 
+        x_years_purchased: "Purchased years",
+        x_sales_person: "Sales person",
         x_purchased_price: "Purchased price",
         x_number_weeks_year: "Number of weeks for year",
         x_vacancy_rewards_dr: "Rewards DR",
@@ -1001,20 +1001,27 @@ const loadMessages = async () => {
 }
 
 const loadCRMLeads = async (filter = []) => {
-    let leads = await oldFlectra.readElement('crm.lead', filter, 0, 0, 0)
-    leads.forEach(async lead => {
-        await s.acquire()
-        try {
-            console.log(s.nrWaiting() + ' calls to createIfNotExistLead are waiting')
-            let newLead = await createIfNotExistLead({ old_lead: lead })
-            if (newLead && newLead.id) {
-                await updatePhoneCalls(newLead, lead.phonecall_ids)
-                await updateLeadActivities(newLead, lead.activity_ids)
+    let start = 0
+    let amount = 100
+    let flag = true
+    while (flag) {
+        let leads = await oldFlectra.readElement('crm.lead', filter, 0, start, amount)
+        leads.forEach(async lead => {
+            await s.acquire()
+            try {
+                console.log(s.nrWaiting() + ' calls to createIfNotExistLead are waiting')
+                let newLead = await createIfNotExistLead({ old_lead: lead })
+                if (newLead && newLead.id) {
+                    await updatePhoneCalls(newLead, lead.phonecall_ids)
+                    await updateLeadActivities(newLead, lead.activity_ids)
+                }
+            } finally {
+                s.release();
             }
-        } finally {
-            s.release();
-        }
-    })
+        })
+        flag = leads.length > 0
+        start+=amount
+    }
 }
 
 const loadCRMPhonecallSummary = async () => {
