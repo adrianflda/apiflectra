@@ -1001,7 +1001,7 @@ const loadMessages = async () => {
 }
 
 const loadCRMLeads = async (filter = []) => {
-    let leads = await oldFlectra.readElement('crm.lead', filter, 0, 0, 10)
+    let leads = await oldFlectra.readElement('crm.lead', filter, 0, 0, 0)
     leads.forEach(async lead => {
         await s.acquire()
         try {
