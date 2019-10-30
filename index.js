@@ -1128,8 +1128,8 @@ const main = async () => {
     //await loadCRMLeads(filter)              //6
     //await loadPhoneCalls()
     //await loadMessages(filter)
-    await workWithThis('crm.lead', filter, loadCRMLeads)
-    await workWithThis('crm.lead', filter, loadMessages)
+    //await workWithThis('crm.lead', filter, loadCRMLeads)
+    //await workWithThis('crm.lead', filter, loadMessages)
     await workWithThis('crm.lead', referidosFilter, updateLeads)
 }
 
