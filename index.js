@@ -992,6 +992,56 @@ const create_invoice = async (invoice) => {
     return new_invoice
 }
 
+const create_account = async (account) => {
+    let {
+        code,
+        name,
+        user_type_id,
+        currency_id,
+        reconcile
+    } = account
+
+
+    let new_account = {
+        code,
+        name,
+        user_type_id: user_type_id && user_type_id[0],
+        currency_id: currency_id && currency_id[0],
+        reconcile
+    }
+
+    new_account.id = new_flectra.createElement({}, 'account.account', new_account)
+    return new_account
+}
+
+const create_journal = async (journal) => {
+    let {
+        name,
+        type,
+        code,
+        show_on_dashboard,
+        default_debit_account_id,
+        default_credit_account_id,
+        currency_id
+    } = journal
+
+    let new_debit_account = default_debit_account_id && await create_if_not_exist_account({old_account_id: default_debit_account_id[0]})
+    let new_credit_account = default_credit_account_id && await create_if_not_exist_account({old_account_id: default_credit_account_id[0]})
+
+    let new_journal = {
+        name,
+        type,
+        code,
+        show_on_dashboard,
+        currency_id: currency_id && currency_id[0],
+        default_debit_account_id: new_debit_account && new_debit_account.id,
+        default_credit_account_id: new_credit_account && new_credit_account.id
+    }
+
+    new_journal.id = new_flectra.createElement({}, 'account.journal', new_journal)
+    return new_journal
+}
+
 const get_payment_term = async ({ old_payment_term, old_payment_term_id }) => {
     old_payment_term = old_payment_term || await old_flectra.readElement(
         'account.payment.term',
@@ -1180,6 +1230,36 @@ const create_if_not_exist_invoice = async ({ old_invoice, old_invoice_id }) => {
     return new_element
 }
 
+const create_if_not_exist_account = async ({ old_account, old_account_id }) => {
+    old_account = old_account || await old_flectra.readElement(
+        'account.account',
+        [['id', '=', old_account_id]],
+        0, 0, 1)
+    let new_element = old_account && await new_flectra.readElement(
+        'account.account',
+        [['code', '=', old_account.code]],
+        ['id'], 0, 1)
+    if (!new_element && old_account) {
+        new_element = await create_account(old_account)
+    }
+    return new_element
+}
+
+const create_if_not_exist_journal = async ({ old_journal, old_journal_id }) => {
+    old_journal = old_journal || await old_flectra.readElement(
+        'account.journal',
+        [['id', '=', old_journal_id]],
+        0, 0, 1)
+    let new_element = old_journal && await new_flectra.readElement(
+        'account.journal',
+        [['name', '=', old_journal.name]],
+        ['id'], 0, 1)
+    if (!new_element && old_journal) {
+        new_element = await create_journal(old_journal)
+    }
+    return new_element
+}
+
 
 
 ///////////////////////////////////////////////////////////// UPDATE //////////////////////////////////////////////////////////////////////
@@ -1285,19 +1365,25 @@ const loadMessages = async (elements = []) => {
         let message_ids = element.message_ids
         let messages = await old_flectra.readElement('mail.message', [['id', 'in', message_ids]])
         console.log(messages.length)
-        let index = 0
-        while (index < messages.length) {
-            let message = messages[index]
-            await s.acquire()
-            try {
-                console.log(s.nrWaiting() + ' calls to create_if_not_exist_Message are waiting')
-                await create_if_not_exist_Message({ old_message: message })
-
-            } finally {
-                s.release();
+        try {
+            let index = 0
+            console.log('index: ', index)
+            while (index < messages.length) {
+                console.log('index: ', index)
+                let message = messages[index] 
+                await s.acquire()
+                try {
+                    console.log(s.nrWaiting() + ' calls to create_if_not_exist_Message are waiting')
+                    await create_if_not_exist_Message({ old_message: message })
+    
+                } finally {
+                    s.release();
+                }
+                index++
+                console.log('message: ', index)
             }
-            index++
-            console.log('message: ', index)
+        } catch (error) {
+            console.log(error)
         }
         elementIndex++
     }
@@ -1393,6 +1479,30 @@ const loadInvoices = async (invoices) => {
     })
 }
 
+const loadAccounts = async (accounts) => {
+    accounts.forEach( async account => {
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_account are waiting')
+            await create_if_not_exist_account({ old_account: account })
+        } finally {
+            s.release();
+        }
+    })
+}
+
+const loadJournals = async (journals) => {
+    journals.forEach( async journal => {
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_journal are waiting')
+            await create_if_not_exist_journal({ old_journal: journal })
+        } finally {
+            s.release();
+        }
+    })
+}
+
 const workWithThis = async (model, filter = [], callback) => {
     let start = 0
     let amount = 100
@@ -1446,8 +1556,11 @@ const main = async () => {
     //await workWithThis('crm.lead', filter, loadCRMLeads)
     //await workWithThis('crm.lead', filter, loadMessages)
     //await workWithThis('crm.lead', referidosFilter, updateLeads)
-    await workWithThis('account.invoice', invoicesFilter, loadInvoices)
-    await workWithThis('account.invoice', invoicesFilter, loadMessages)
+    //await workWithThis('account.invoice', invoicesFilter, loadInvoices)
+    //await workWithThis('account.invoice', invoicesFilter, loadMessages)
+    //await workWithThis('account.journal', [], loadAccounts)
+    await workWithThis('account.journal', [], loadJournals)
+    
 }
 
 main()
