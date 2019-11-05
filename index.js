@@ -28,17 +28,17 @@ const crudLeads = async () => {
             let index = 0
             while (index < part) {
                 let element = leads[index]
-                let newLead = {
+                let new_lead = {
                     id: element.id,
                     user_id,
                     team_id: 118,
                     type: 'opportunity'
                 }
                 await main.deleteElement('crm.lead', element.id)
-                /* let result = await main.updateElement('crm.lead', newLead)
+                /* let result = await main.updateElement('crm.lead', new_lead)
                 console.log('update lead result: ', result)
                 result = await main.execute_kw('crm-lead', 'convert_opportunity', [
-                    [newLead.id], {}
+                    [new_lead.id], {}
                 ])
                 console.log('convert lead result: ', result) */
                 console.log(index)
@@ -70,16 +70,16 @@ const processHeaders = (element) => {
         "NOTAS DE FUENTE": "x_sources_note"
     }
 
-    let newLead = {}
+    let new_lead = {}
     for (let field in element) {
         let headersField = headers[field]
         if (headersField === 'x_sources_note')
-            newLead[headersField] = (!newLead[headersField]) ? 'Notas: ' : newLead[headersField] + element[field] + '\n'
+            new_lead[headersField] = (!new_lead[headersField]) ? 'Notas: ' : new_lead[headersField] + element[field] + '\n'
         else
-            newLead[headersField] = element[field]
+            new_lead[headersField] = element[field]
     }
 
-    return newLead
+    return new_lead
 }
 
 const processContact = (data) => {
@@ -140,32 +140,32 @@ const processXLSXToLeads = async () => {
             let part = (rawLeads.length / agents.length) * (agentIndex + 1)
             while (index < part) {
                 let element = rawLeads[index]
-                let newLead = processHeaders(element)
-                newLead = {
-                    ...newLead,
+                let new_lead = processHeaders(element)
+                new_lead = {
+                    ...new_lead,
                     team_id,
                     user_id,
                     country_id,
                     state_id
                 }
-                let lead = await main.readElement('crm.lead', [['name', 'like', newLead.name]], ['id'], 0, 1)
+                let lead = await main.readElement('crm.lead', [['name', 'like', new_lead.name]], ['id'], 0, 1)
 
                 let client = processContact(lead)
                 let partner = await main.readElement('res.partner', [['mobile', '=', client.mobile], ['name', '=', client.name]], ['id'], 0, 1)
                 let partner_id = partner && partner.id
                 if (!partner_id)
                     partner_id = await main.createElement({}, 'res.partner', client)
-                newLead.partner_id = partner_id
+                new_lead.partner_id = partner_id
 
                 if (lead && !lead.partner_id) {
                     console.log('existe lead: ', lead)
                     await main.updateElement('crm.lead', { id: lead.id, partner_id })
                 } else {
-                    let result = await main.createElement({}, 'crm.lead', newLead)
+                    let result = await main.createElement({}, 'crm.lead', new_lead)
                     console.log('create lead result: ', result)
-                    newLead.id = result
+                    new_lead.id = result
                     result = await main.execute_kw('crm.lead', 'convert_opportunity', [
-                        [newLead.id], { partner_id }
+                        [new_lead.id], { partner_id }
                     ])
                     console.log('convert lead result: ', result)
                 }
@@ -287,8 +287,8 @@ const oldDeployData = {
     "username": process.env.oldUSER_NAME,
     "password": process.env.oldPASSWORD
 }
-const oldFlectra = new Flectra(oldDeployData)
-const newFlectra = new Flectra(newDeployData)
+const old_flectra = new Flectra(oldDeployData)
+const new_flectra = new Flectra(newDeployData)
 
 String.prototype.replaceAll = function (search, replacement) {
     var target = this;
@@ -366,7 +366,7 @@ const createClient = async (partner) => {
 
     comment = '\n\n' + formatNotes(partner)
 
-    let newPartner = {
+    let new_partner = {
         name: name || 'empty field',
         email,
         phone,
@@ -382,8 +382,8 @@ const createClient = async (partner) => {
         comment
     }
 
-    newPartner.id = await newFlectra.createElement({}, 'res.partner', newPartner) || false
-    return newPartner
+    new_partner.id = await new_flectra.createElement({}, 'res.partner', new_partner) || false
+    return new_partner
 }
 
 const createUser = async (user) => {
@@ -392,14 +392,14 @@ const createUser = async (user) => {
         login
     } = user
 
-    let newUser = {
+    let new_user = {
         name,
         login,
         customer: false
     }
 
-    newUser.id = await newFlectra.createElement({}, 'res.users', newUser) || false
-    return newUser
+    new_user.id = await new_flectra.createElement({}, 'res.users', new_user) || false
+    return new_user
 }
 
 
@@ -412,27 +412,27 @@ const createTeam = async (team) => {
     } = team
 
     if (Array.isArray(user_id)) {
-        let user_id_login = await oldFlectra.readElement('res.users', [['id', '=', user_id[0]]], ['login'], 0, 1)
+        let user_id_login = await old_flectra.readElement('res.users', [['id', '=', user_id[0]]], ['login'], 0, 1)
         let login = user_id_login && user_id_login.login
-        let new_user = await newFlectra.readElement('res.users', [['login', '=', login]], ['id'], 0, 1)
+        let new_user = await new_flectra.readElement('res.users', [['login', '=', login]], ['id'], 0, 1)
         user_id = new_user && new_user.id
     }
 
     if (Array.isArray(member_ids)) {
-        let members = await oldFlectra.readElement('res.users', [['id', 'in', member_ids]], ['login'])
-        let new_members = await newFlectra.readElement('res.users', [['login', 'in', members.map(member => member.login)]])
+        let members = await old_flectra.readElement('res.users', [['id', 'in', member_ids]], ['login'])
+        let new_members = await new_flectra.readElement('res.users', [['login', 'in', members.map(member => member.login)]])
         member_ids = new_members && new_members.map(member => member.id)
     }
 
-    let newTeam = {
+    let new_team = {
         name,
         alias_name,
         user_id,
         member_ids: [[6, 0, member_ids]]
     }
 
-    newTeam.id = await newFlectra.createElement({}, 'crm.team', newTeam) || false
-    return newTeam
+    new_team.id = await new_flectra.createElement({}, 'crm.team', new_team) || false
+    return new_team
 }
 
 const createStage = async (stage) => {
@@ -445,19 +445,19 @@ const createStage = async (stage) => {
         requirements
     } = stage
 
-    let newTeam = await createIfNotExistTeam({ old_team_id: team_id[0] })
+    let new_team = team_id && await create_if_not_exist_team({ old_team_id: team_id[0] })
 
-    let newStage = {
+    let new_stage = {
         name,
-        team_id: newTeam && newTeam.id,
+        team_id: new_team && new_team.id,
         on_change: on_change,
         probability: on_change && probability,
         fold: fold,
         requirements: requirements
     }
 
-    newStage.id = await newFlectra.createElement({}, 'crm.stage', newStage) || false
-    return newStage
+    new_stage.id = await new_flectra.createElement({}, 'crm.stage', new_stage) || false
+    return new_stage
 }
 
 const createLead = async (lead) => {
@@ -494,12 +494,12 @@ const createLead = async (lead) => {
 
     description = '\n\n' + formatNotes(lead)
 
-    let newUser = Array.isArray(user_id) && await createIfNotExistUser({ old_user_id: user_id[0] })
-    let newPartner = Array.isArray(partner_id) && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
-    let newTeam = Array.isArray(team_id) && await createIfNotExistTeam({ old_team_id: team_id[0] })
-    let newStage = Array.isArray(stage_id) && await createIfNotExistStage({ old_stage_id: stage_id[0] })
+    let new_user = user_id && await create_if_not_exist_user({ old_user_id: user_id[0] })
+    let new_partner = partner_id && await create_if_not_exist_partner({ old_partner_id: partner_id[0] })
+    let new_team = team_id && await create_if_not_exist_team({ old_team_id: team_id[0] })
+    let new_stage = stage_id && await create_if_not_exist_Stage({ old_stage_id: stage_id[0] })
 
-    let newLead = {
+    let new_lead = {
         name,
         mobile,
         phone,
@@ -511,10 +511,10 @@ const createLead = async (lead) => {
         street2,
         city,
         country_id: country_id && country_id[0],
-        partner_id: newPartner.id,
-        user_id: newUser && newUser.id,
-        team_id: newTeam && newTeam.id,
-        stage_id: newStage.id,
+        partner_id: new_partner.id,
+        user_id: new_user && new_user.id,
+        team_id: new_team && new_team.id,
+        stage_id: new_stage.id,
         notes: notes + ' \n ' + x_sourse_notes,
         color,
         activity_summary,
@@ -524,12 +524,12 @@ const createLead = async (lead) => {
         description
     }
 
-    newLead.id = await newFlectra.createElement({ default_type: type }, 'crm.lead', newLead) || false
-    return newLead
+    new_lead.id = await new_flectra.createElement({ default_type: type }, 'crm.lead', new_lead) || false
+    return new_lead
 }
 
 const createCalendarEvent = async (calendar_event_id) => {
-    let event = await oldFlectra.readElement('calendar.event', [['id', '=', calendar_event_id]], 0, 0, 1)
+    let event = await old_flectra.readElement('calendar.event', [['id', '=', calendar_event_id]], 0, 0, 1)
     //console.log('calendar event: ', JSON.stringify(event))
 
     let {
@@ -598,7 +598,7 @@ const createCalendarEvent = async (calendar_event_id) => {
         partner_ids                         // Array [12, 65] res.partner
     } = event
 
-    let exist = await newFlectra.readElement('calendar.event', [
+    let exist = await new_flectra.readElement('calendar.event', [
         ['name', '=', name],
         ['res_model', '=', res_model],
         ['start_date', '=', start_date]
@@ -607,22 +607,22 @@ const createCalendarEvent = async (calendar_event_id) => {
         return
     }
 
-    let partners = await newFlectra.readElement('res.partner', [['id', 'in', partner_ids]], ['id'])
+    let partners = await new_flectra.readElement('res.partner', [['id', 'in', partner_ids]], ['id'])
     if (Array.isArray(partners)) {
         partner_ids = [[6, 0, partners.map(partner => partner.id)]]
     }
 
-    let newUser = user_id && await createIfNotExistUser({ old_user_id: user_id[0] })
-    let newLead = opportunity_id && await createIfNotExistLead({ old_lead_id: opportunity_id[0] })
-    let newPartner = partner_id && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
+    let new_user = user_id && await create_if_not_exist_user({ old_user_id: user_id[0] })
+    let new_lead = opportunity_id && await create_if_not_exist_Lead({ old_lead_id: opportunity_id[0] })
+    let new_partner = partner_id && await create_if_not_exist_partner({ old_partner_id: partner_id[0] })
 
-    let newEvent = {
-        res_id: newLead && newLead.id,
+    let new_event = {
+        res_id: new_lead && new_lead.id,
         partner_ids,
-        partner_id: newPartner && newPartner.id,
+        partner_id: new_partner && new_partner.id,
         res_model_id: res_model_id[0],
-        user_id: newUser && newUser.id,
-        opportunity_id: newLead && newLead.id,
+        user_id: new_user && new_user.id,
+        opportunity_id: new_lead && new_lead.id,
         //message_ids,                        // Array [9292,9291], model=mail.message
 
         start,                              //String "2019-10-19 16:00:00"
@@ -663,8 +663,8 @@ const createCalendarEvent = async (calendar_event_id) => {
         show_as,                            // String: "busy",
     }
 
-    newEvent.id = await newFlectra.createElement({}, 'calendar.event', newEvent) || false
-    return newEvent
+    new_event.id = await new_flectra.createElement({}, 'calendar.event', new_event) || false
+    return new_event
 }
 
 const createMessage = async (message, new_res_id) => {
@@ -685,18 +685,18 @@ const createMessage = async (message, new_res_id) => {
 
     } = message
 
-    let newAuthor = Array.isArray(author_id) && await createIfNotExistPartner({ old_partner_id: author_id[0] })
-    let newParent = Array.isArray(parent_id) && await createIfNotExistMessage({ old_message_ids: [parent_id[0]] })
-    let new_res = new_res_id && { id: new_res_id } || await createIfNotExistLead({ old_lead_id: res_id })
+    let new_author = author_id && await create_if_not_exist_partner({ old_partner_id: author_id[0] })
+    let new_parent = parent_id && await create_if_not_exist_Message({ old_message_ids: [parent_id[0]] })
+    let new_res = new_res_id && { id: new_res_id } || await create_if_not_exist_Lead({ old_lead_id: res_id })
 
-    let newMessage = {
+    let new_message = {
         subject,                            //String
         date,                               //String 
         email_from,                         //String    
-        author_id: newAuthor && newAuthor.id,    //Array [23], res.partner    
+        author_id: new_author && new_author.id,    //Array [23], res.partner    
         record_name,                            //String
         reply_to,                               //String
-        parent_id: newParent && newParent[0] && newParent[0].id,      //Array [22, 'mesegae], mail.message
+        parent_id: new_parent && new_parent[0] && new_parent[0].id,      //Array [22, 'mesegae], mail.message
         model,                              //String
         res_id: new_res && new_res.id,                             //Integer
         message_type,                       //String 
@@ -705,8 +705,8 @@ const createMessage = async (message, new_res_id) => {
         message_id,                         //String
     }
 
-    newMessage.id = await newFlectra.createElement({}, 'mail.message', newMessage)
-    return newMessage
+    new_message.id = await new_flectra.createElement({}, 'mail.message', new_message)
+    return new_message
 }
 
 const createActivity = async (lead, activity = {}) => {
@@ -729,7 +729,7 @@ const createActivity = async (lead, activity = {}) => {
         date_deadline
     } = activity
 
-    let exist = await newFlectra.readElement('mail.activity', [
+    let exist = await new_flectra.readElement('mail.activity', [
         ['res_name', '=', res_name],
         ['display_name', '=', display_name],
         ['res_model', '=', res_model]
@@ -738,7 +738,7 @@ const createActivity = async (lead, activity = {}) => {
         return
     }
 
-    let newActivity = {
+    let new_activity = {
         res_id: lead.id,
         calendar_event_id,
         note,
@@ -757,8 +757,8 @@ const createActivity = async (lead, activity = {}) => {
         date_deadline
     }
 
-    newActivity.id = await newFlectra.createElement({}, 'mail.activity', newActivity) || false
-    return newActivity
+    new_activity.id = await new_flectra.createElement({}, 'mail.activity', new_activity) || false
+    return new_activity
 }
 
 const createPhonecall = async (call) => {
@@ -771,125 +771,420 @@ const createPhonecall = async (call) => {
         summary_id
     } = call
 
-    let newUser = user_id && await createIfNotExistUser({ old_user_id: user_id[0] })
-    let newPartner = partner_id && await createIfNotExistPartner({ old_partner_id: partner_id[0] })
-    let newLead = opportunity_id && await createIfNotExistLead({ old_lead_id: opportunity_id[0] })
-    let newSummary = name && await newFlectra.readElement('crm.phonecall.summary', [['name', '=', name]], 0, 0, 1)
+    let new_user = user_id && await create_if_not_exist_user({ old_user_id: user_id[0] })
+    let new_partner = partner_id && await create_if_not_exist_partner({ old_partner_id: partner_id[0] })
+    let new_lead = opportunity_id && await create_if_not_exist_Lead({ old_lead_id: opportunity_id[0] })
+    let newSummary = name && await new_flectra.readElement('crm.phonecall.summary', [['name', '=', name]], 0, 0, 1)
 
-    let newCall = old_call && old_call.name && await newFlectra.readElement('crm.phonecall', [
+    let new_call = old_call && old_call.name && await new_flectra.readElement('crm.phonecall', [
         ['name', '=', name],
         ['description', '=', description],
         ['summary_id', '=', newSummary && newSummary.id],
-        ['partner_id', '=', newPartner && newPartner.id],
-        ['opportunity_id', '=', newLead && newLead.id]
+        ['partner_id', '=', new_partner && new_partner.id],
+        ['opportunity_id', '=', new_lead && new_lead.id]
     ], ['id'], 0, 1)
 
-    if (newCall && newCall.id) {
-        return newCall
+    if (new_call && new_call.id) {
+        return new_call
     }
 
-    let newPhonecall = {
+    let new_phonecall = {
         description,
         name,
         summary_id: newSummary && newSummary.id,
-        partner_id: newPartner && newPartner.id,
-        opportunity_id: newLead && newLead.id,
-        user_id: newUser && newUser.id
+        partner_id: new_partner && new_partner.id,
+        opportunity_id: new_lead && new_lead.id,
+        user_id: new_user && new_user.id
     }
 
-    newPhonecall.id = await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
-    return newPhonecall
+    new_phonecall.id = await new_flectra.createElement({}, 'crm.phonecall', new_phonecall)
+    return new_phonecall
+}
+
+const createOrder = async (order) => {
+    let {
+        date_order,
+        partner_id, //cliente:
+        validity_date, //fecha_caducidad: 
+        //payment_term_id, //plazo_de_pago:
+        user_id,
+        team_id,
+        //discount_method, //tipo_descuentos:
+        //discount_amount, //descuento: 
+        client_order_ref,
+    } = order
+
+    let new_user = user_id && await create_if_not_exist_user({ old_user_id: user_id[0] })
+    let new_partner = partner_id && await create_if_not_exist_partner({ old_partner_id: partner_id[0] })
+    let new_team = team_id && await create_if_not_exist_team({ old_team_id: team_id[0] })
+
+    let new_order = {
+        state: 'draft',
+        date_order,
+        validity_date, //fecha_caducidad: 
+        user_id: new_user && new_user.id,
+        team_id: new_team && new_team.id,
+        partner_id: new_partner && new_partner.id, //cliente:
+        //discount_method, //tipo_descuentos:
+        //discount_amount, //descuento: 
+        client_order_ref,
+        payment_term_id: null
+    }
+
+    new_order.id = await new_flectra.createElement({}, 'sale.order', new_order)
+    return new_order
+}
+
+const createOrderLine = async (orderLine) => {
+    let {
+        order_id,
+        layout_category_id,
+        name,
+        product_id,
+        price_unit, //precio
+        product_uom_qty, //cantidad:
+        qty_delivered,
+    } = orderLine
+
+    let new_product = product_id && await create_if_not_exist_product({ old_product_id: product_id[0] })
+    let new_order = order_id && await create_if_not_exist_Order({ old_order_id: order_id[0] })
+
+    let new_order_line = {
+        order_id: new_order && new_order.id,
+        layout_category_id: layout_category_id && layout_category_id.id,
+        name,
+        product_id: new_product && new_product.id,
+        price_unit, //precio
+        product_uom_qty, //cantidad:
+        qty_delivered,
+    }
+
+    new_order_line.id = await new_flectra.createElement({}, 'sale.order.line', new_order_line)
+    return new_order_line
+}
+
+const createProduct = async (product) => {
+    let {
+        name,
+        default_code,
+        sale_ok,
+        purchase_ok,
+        type,
+        categ_id,
+        lst_price, //precio_de_venta: 
+        standard_price, //costo: 
+        invoice_policy, //politica_facturacion: 
+        sequence,
+        // taxes_id: [[6, 0, [taxes_id]]], //impuestosde_cliente: 
+        description, //descripcion_interna: 
+        description_sale //descripcion_para_cliente: 
+    } = product
+
+    let new_product = {
+        name,
+        default_code,
+        sale_ok,
+        purchase_ok,
+        type,
+        categ_id: categ_id && categ_id.id,
+        lst_price, //precio_de_venta: 
+        standard_price, //costo: 
+        invoice_policy, //politica_facturacion: 
+        sequence,
+        // taxes_id: [[6, 0, [taxes_id]]], //impuestosde_cliente: 
+        description, //descripcion_interna: 
+        description_sale //descripcion_para_cliente: 
+    }
+
+    new_product.id = await new_flectra.createElement({}, 'product.product', new_product)
+    return new_product
+}
+
+const create_account_tag = async (tag) => {
+    let {
+        name
+    } = tag
+
+    let new_tag = {
+        name
+    }
+
+    new_tag.id = await new_flectra.createElement({}, 'account.analytic.tag', new_tag)
+    return new_tag
+}
+
+const create_invoice_line = async (invoice_line) => {
+    let {
+        account_id,
+        name,
+        product_id,
+        layout_category_id,
+        analytic_tag_ids,
+        quantity,
+        price_unit,
+        //invoice_line_taxt_id: [[6, 0, [invoice_line_taxt_id]]]
+    } = invoice_line
+
+    let new_account = account_id && await get_account({ old_account_id: account_id[0] })
+    let new_product = await get_membership_product()
+    let new_tag = analytic_tag_ids && analytic_tag_ids[0] && await create_if_not_exist_account_tag({ old_account_tag_id: analytic_tag_ids[0] })
+
+    let new_invoice_line = {
+        account_id: new_account && new_account.id,
+        name,
+        product_id: new_product && new_product.id,
+        layout_category_id: layout_category_id && layout_category_id.id,
+        analytic_tag_ids: new_tag && new_tag.id && [[6, 0, [new_tag.id]]],
+        quantity,
+        price_unit,
+        //invoice_line_taxt_id: [[6, 0, [invoice_line_taxt_id]]]
+    }
+
+    new_invoice_line.id = await new_flectra.createElement({}, 'account.invoice.line', new_invoice_line)
+    return new_invoice_line
+}
+
+const create_invoice = async (invoice) => {
+    let {
+        currency_id,
+        account_id,
+        name,
+        state,
+        partner_id,
+        date_invoice,
+        date_due,
+        user_id,
+        team_id,
+        origin,
+        invoice_line_ids,
+        payment_term_id,
+        comment,
+        x_type
+    } = invoice
+
+    let new_account = account_id && await get_account({ old_account_id: account_id[0] })
+    let new_partner = account_id && await create_if_not_exist_partner({ old_partner_id: partner_id[0] })
+    let new_user = user_id && await create_if_not_exist_user({ old_user_id: user_id[0] })
+    let new_team = team_id && await create_if_not_exist_team({ old_team_id: team_id[0] })
+    let new_payment_term = payment_term_id && await get_payment_term({ old_payment_term_id: payment_term_id[0] })
+    let new_invoice_line = invoice_line_ids && await create_if_not_exist_invoice_line({ old_invoice_line_id: invoice_line_ids[0] })
+
+    let new_invoice = {
+        currency_id: currency_id && currency_id[0],
+        account_id: new_account && new_account.id,
+        name,
+        state: 'draft',
+        partner_id: new_partner && new_partner.id,
+        date_invoice,
+        date_due,
+        user_id: new_user && new_user.id,
+        team_id: new_team && new_team.id,
+        //origin,
+        invoice_line_ids: new_invoice_line && [
+            [6, 0, [new_invoice_line.id]]
+        ],
+        payment_term_id: new_payment_term && new_payment_term.id,
+        comment: `${state} \n ${comment || ''}`,
+        x_type
+    }
+
+    new_invoice.id = new_flectra.createElement({}, 'account.invoice', new_invoice)
+    return new_invoice
+}
+
+const get_payment_term = async ({ old_payment_term, old_payment_term_id }) => {
+    old_payment_term = old_payment_term || await old_flectra.readElement(
+        'account.payment.term',
+        [['id', '=', old_payment_term_id]],
+        0, 0, 1)
+    let new_element = old_payment_term && await new_flectra.readElement(
+        'account.payment.term',
+        [['name', '=', '30 Net Days']],
+        ['id'], 0, 1)
+    return new_element
+}
+
+const get_account = async ({ old_account, old_account_id }) => {
+    old_account = old_account || await old_flectra.readElement('account.account', [['id', '=', old_account_id]], 0, 0, 1)
+    let new_element = old_account && await new_flectra.readElement(
+        'account.account',
+        [
+            ['code', '=', '105.01.01']
+        ],
+        ['id'], 0, 1)
+    return new_element
+}
+
+const get_membership_product = async () => {
+    let new_element = await new_flectra.readElement(
+        'product.product',
+        [
+            ['default_code', '=', 'membresia']
+        ],
+        ['id'], 0, 1)
+    return new_element
 }
 
 ///////////////////////////////////////////////////////////// GET ///////////////////////////////////////////////////////////////////
 
-const createIfNotExistUser = async ({ old_user_id, old_user }) => {
-    old_user = old_user || await oldFlectra.readElement('res.users', [['id', '=', old_user_id]], ['name', 'login'], 0, 1)
-    let newUser = old_user && old_user.login && await newFlectra.readElement('res.users', [
+const create_if_not_exist_user = async ({ old_user_id, old_user }) => {
+    old_user = old_user || await old_flectra.readElement('res.users', [['id', '=', old_user_id]], ['name', 'login'], 0, 1)
+    let new_user = old_user && old_user.login && await new_flectra.readElement('res.users', [
         ['login', '=', old_user.login]
     ], ['id'], 0, 1)
-    if (!newUser && old_user) {
-        newUser = await createUser(old_user)
+    if (!new_user && old_user) {
+        new_user = await createUser(old_user)
     }
-    return newUser
+    return new_user
 }
 
-const createIfNotExistPartner = async ({ old_partner_id, old_partner }) => {
-    old_partner = old_partner || await oldFlectra.readElement('res.partner', [
+const create_if_not_exist_partner = async ({ old_partner_id, old_partner }) => {
+    old_partner = old_partner || await old_flectra.readElement('res.partner', [
         ['id', '=', old_partner_id]
     ], 0, 0, 1)
-    let newPartner = old_partner && old_partner.name && await newFlectra.readElement('res.partner', [
+    let new_partner = old_partner && old_partner.name && await new_flectra.readElement('res.partner', [
         ['name', '=', old_partner.name],
         ['phone', '=', old_partner.phone]
     ], ['id'], 0, 1)
-    if (!newPartner && old_partner) {
-        newPartner = await createClient(old_partner)
+    if (!new_partner && old_partner) {
+        new_partner = await createClient(old_partner)
     }
-    return newPartner
+    return new_partner
 }
 
-const createIfNotExistTeam = async ({ old_team_id, old_team }) => {
-    old_team = old_team || await oldFlectra.readElement('crm.team', [
+const create_if_not_exist_team = async ({ old_team_id, old_team }) => {
+    old_team = old_team || await old_flectra.readElement('crm.team', [
         ['id', '=', old_team_id]
     ], 0, 0, 1)
-    let newTeam = old_team && await newFlectra.readElement('crm.team', [
+    let new_team = old_team && await new_flectra.readElement('crm.team', [
         ['name', '=', old_team.name]
     ], 0, 0, 1)
-    if (!newTeam && old_team) {
-        newTeam = await createTeam(old_team)
+    if (!new_team && old_team) {
+        new_team = await createTeam(old_team)
     }
-    return newTeam
+    return new_team
 }
 
-const createIfNotExistStage = async ({ old_stage_id, old_stage }) => {
-    old_stage = old_stage || await oldFlectra.readElement('crm.stage', [
+const create_if_not_exist_Stage = async ({ old_stage_id, old_stage }) => {
+    old_stage = old_stage || await old_flectra.readElement('crm.stage', [
         ['id', '=', old_stage_id]
     ], ['name'], 0, 1)
-    let newStage = old_stage && old_stage.name && await newFlectra.readElement('crm.stage', [
+    let new_stage = old_stage && old_stage.name && await new_flectra.readElement('crm.stage', [
         ['name', '=', old_stage.name]
     ], ['id'], 0, 1)
-    if (!newStage && old_stage) {
-        newStage = await createStage(old_stage)
+    if (!new_stage && old_stage) {
+        new_stage = await createStage(old_stage)
     }
-    return newStage
+    return new_stage
 }
 
-const createIfNotExistMessage = async ({ old_message_ids, old_message }) => {
-    let messages = old_message && [old_message] || await oldFlectra.readElement('mail.message', [
+const create_if_not_exist_Message = async ({ old_message_ids, old_message }) => {
+    let messages = old_message && [old_message] || await old_flectra.readElement('mail.message', [
         ['id', 'in', old_message_ids]
     ])
     let new_message_ids = []
     let index = 0
     while (index < messages.length) {
         let message = messages[index]
-        let newMessage = await newFlectra.readElement('mail.message', [
+        let new_message = await new_flectra.readElement('mail.message', [
             ['message_id', '=', message.message_id]
         ], 0, 0, 1)
-        if (!newMessage) {
-            newMessage = await createMessage(message)
+        if (!new_message) {
+            new_message = await createMessage(message)
         }
-        new_message_ids.push(newMessage.id)
+        new_message_ids.push(new_message.id)
         index++
     }
     return new_message_ids
 }
 
-const createIfNotExistLead = async ({ old_lead_id, old_lead }) => {
-    old_lead = old_lead || await oldFlectra.readElement('crm.lead', [
+const create_if_not_exist_Lead = async ({ old_lead_id, old_lead }) => {
+    old_lead = old_lead || await old_flectra.readElement('crm.lead', [
         ['id', '=', old_lead_id]
     ], 0, 0, 1)
-    let newLead = old_lead && await newFlectra.readElement('crm.lead', [
+    let new_lead = old_lead && await new_flectra.readElement('crm.lead', [
         ['name', '=', old_lead.name]
     ], 0, 0, 1)
-    if (!newLead) {
-        newLead = await createLead(old_lead)
+    if (!new_lead) {
+        new_lead = await createLead(old_lead)
     }
-    return newLead
+    return new_lead
 }
+
+const create_if_not_exist_Order = async ({ old_order_id, old_order }) => {
+    old_order = old_order || await old_flectra.readElement('sale.order', [['id', '=', old_order_id]], ['name', 'login'], 0, 1)
+    let new_order = old_order && await new_flectra.readElement('sale.order', [
+        ['client_order_ref', '=', old_order.client_order_ref]
+    ], ['id'], 0, 1)
+    if (!new_order && old_order) {
+        new_order = await createOrder(old_order)
+    }
+    return new_order
+}
+
+const create_if_not_exist_product = async ({ old_product_id, old_product }) => {
+    old_product = old_product || await old_flectra.readElement('sale.product', [['id', '=', old_product_id]], ['name', 'login'], 0, 1)
+    let new_product = old_product && await new_flectra.readElement('sale.product', [
+        ['name', '=', old_product.name]
+    ], ['id'], 0, 1)
+    if (!new_product && old_product) {
+        new_product = await createProduct(old_product)
+    }
+    return new_product
+}
+
+
+
+const create_if_not_exist_account_tag = async ({ old_account_tag, old_account_tag_id }) => {
+    old_account_tag = old_account_tag || await old_flectra.readElement(
+        'account.analytic.tag',
+        [['id', '=', old_account_tag_id]],
+        0, 0, 1)
+    let new_element = old_account_tag && await new_flectra.readElement(
+        'account.analytic.tag',
+        [['name', '=', old_account_tag.name]],
+        ['id'], 0, 1)
+    if (!new_element && old_account_tag) {
+        new_element = await create_account_tag(old_account_tag)
+    }
+    return new_element
+}
+
+const create_if_not_exist_invoice_line = async ({ old_invoice_line, old_invoice_line_id }) => {
+    old_invoice_line = old_invoice_line || await old_flectra.readElement(
+        'account.invoice.line',
+        [['id', '=', old_invoice_line_id]],
+        0, 0, 1)
+    let new_element = old_invoice_line && await new_flectra.readElement(
+        'account.invoice.line',
+        [['name', '=', old_invoice_line.name]],
+        ['id'], 0, 1)
+    if (!new_element && old_invoice_line) {
+        new_element = await create_invoice_line(old_invoice_line)
+    }
+    return new_element
+}
+
+const create_if_not_exist_invoice = async ({ old_invoice, old_invoice_id }) => {
+    old_invoice = old_invoice || await old_flectra.readElement(
+        'account.invoice',
+        [['id', '=', old_invoice_id]],
+        0, 0, 1)
+    let new_element = old_invoice && await new_flectra.readElement(
+        'account.invoice',
+        [['name', '=', old_invoice.name]],
+        ['id'], 0, 1)
+    if (!new_element && old_invoice) {
+        new_element = await create_invoice(old_invoice)
+    }
+    return new_element
+}
+
+
 
 ///////////////////////////////////////////////////////////// UPDATE //////////////////////////////////////////////////////////////////////
 const updateLeadActivities = async (lead = {}, activity_ids = []) => {
-    let activities = await oldFlectra.readElement('mail.activity', [['id', 'in', activity_ids]])
+    let activities = await old_flectra.readElement('mail.activity', [['id', 'in', activity_ids]])
     let index = 0
     while (index < activities.length) {
         let activity = activities[index]
@@ -914,7 +1209,7 @@ const summary_ids = {
 }
 
 const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
-    let phonecalls = await oldFlectra.readElement('crm.phonecall', [['id', 'in', phonecall_ids]], 0, 0, 0)
+    let phonecalls = await old_flectra.readElement('crm.phonecall', [['id', 'in', phonecall_ids]], 0, 0, 0)
     let index = 0
     while (index < phonecalls.length) {
         let phonecall = phonecalls[index]
@@ -927,7 +1222,7 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
 
         x_subject = (isFisrtFlectra) ? x_subject : name
 
-        let newPhonecall = await newFlectra.readElement('crm.phonecall', [
+        let new_phonecall = await new_flectra.readElement('crm.phonecall', [
             ['name', '=', name],
             ['description', '=', description],
             ['partner_id', '=', lead.partner_id && lead.partner_id[0]],
@@ -935,15 +1230,15 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
             ['date', '=', date]
         ], 0, 0, 1)
 
-        if (newPhonecall) {
-            return newPhonecall
+        if (new_phonecall) {
+            return new_phonecall
         }
 
         console.log(summary_ids, x_subject, summary_ids[x_subject], name, summary_ids[name])
         if (summary_ids[x_subject]) {
-            let newSummary = await newFlectra.readElement('crm.phonecall.summary', [['name', '=', x_subject]], ['id'], 0, 1)
+            let newSummary = await new_flectra.readElement('crm.phonecall.summary', [['name', '=', x_subject]], ['id'], 0, 1)
 
-            let newPhonecall = {
+            let new_phonecall = {
                 description,
                 name: x_subject,
                 summary_id: newSummary && newSummary.id,
@@ -953,7 +1248,7 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
                 date
             }
 
-            await newFlectra.createElement({}, 'crm.phonecall', newPhonecall)
+            await new_flectra.createElement({}, 'crm.phonecall', new_phonecall)
             console.log('phonecall: ', index++, phonecall)
         }
         index++
@@ -965,15 +1260,15 @@ const updateLeads = async (leads) => {
         await s.acquire()
         try {
             console.log(s.nrWaiting() + ' calls to updatelead are waiting')
-            let newLead = await createIfNotExistLead({ old_lead: lead })
-            if (newLead && (!newLead.contact_name || !newLead.partner_id)) {
-                let newPartner = await createIfNotExistPartner({ old_partner_id: lead.partner_id && lead.partner_id[0] })
+            let new_lead = await create_if_not_exist_Lead({ old_lead: lead })
+            if (new_lead && (!new_lead.contact_name || !new_lead.partner_id)) {
+                let new_partner = lead.partner_id && await create_if_not_exist_partner({ old_partner_id: lead.partner_id[0] })
                 let leadForUpdate = {
-                    id: newLead.id,
-                    partner_id: newPartner.id,
+                    id: new_lead.id,
+                    partner_id: new_partner.id,
                     contact_name: lead.contact_name
                 }
-                await newFlectra.updateElement('crm.lead', leadForUpdate)
+                await new_flectra.updateElement('crm.lead', leadForUpdate)
             }
         } finally {
             s.release();
@@ -983,20 +1278,20 @@ const updateLeads = async (leads) => {
 
 
 /////////////////////////////////////////////////////////////// LOAD /////////////////////////////////////////////////////////////////////////////
-const loadMessages = async (leads = []) => {
-    let leadIndex = 0
-    while (leadIndex < leads.length) {
-        let lead = leads[leadIndex]
-        let message_ids = lead.message_ids
-        let messages = await oldFlectra.readElement('mail.message', [['id', 'in', message_ids]])
-
+const loadMessages = async (elements = []) => {
+    let elementIndex = 0
+    while (elementIndex < elements.length) {
+        let element = elements[elementIndex]
+        let message_ids = element.message_ids
+        let messages = await old_flectra.readElement('mail.message', [['id', 'in', message_ids]])
+        console.log(messages.length)
         let index = 0
         while (index < messages.length) {
             let message = messages[index]
             await s.acquire()
             try {
-                console.log(s.nrWaiting() + ' calls to createIfNotExistMessage are waiting')
-                await createIfNotExistMessage({ old_message: message })
+                console.log(s.nrWaiting() + ' calls to create_if_not_exist_Message are waiting')
+                await create_if_not_exist_Message({ old_message: message })
 
             } finally {
                 s.release();
@@ -1004,7 +1299,7 @@ const loadMessages = async (leads = []) => {
             index++
             console.log('message: ', index)
         }
-        leadIndex++
+        elementIndex++
     }
 }
 
@@ -1012,11 +1307,11 @@ const loadCRMLeads = async (leads = []) => {
     leads.forEach(async lead => {
         await s.acquire()
         try {
-            console.log(s.nrWaiting() + ' calls to createIfNotExistLead are waiting')
-            let newLead = await createIfNotExistLead({ old_lead: lead })
-            if (newLead && newLead.id) {
-                await updatePhoneCalls(newLead, lead.phonecall_ids)
-                await updateLeadActivities(newLead, lead.activity_ids)
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_Lead are waiting')
+            let new_lead = await create_if_not_exist_Lead({ old_lead: lead })
+            if (new_lead && new_lead.id) {
+                await updatePhoneCalls(new_lead, lead.phonecall_ids)
+                await updateLeadActivities(new_lead, lead.activity_ids)
             }
         } finally {
             s.release();
@@ -1025,48 +1320,48 @@ const loadCRMLeads = async (leads = []) => {
 }
 
 const loadCRMPhonecallSummary = async () => {
-    let summarys = await oldFlectra.readElement('crm.phonecall.summary', [], ['name'], 0, 0)
+    let summarys = await old_flectra.readElement('crm.phonecall.summary', [], ['name'], 0, 0)
     summarys.forEach(async summary => {
-        let exist = await newFlectra.readElement('crm.phonecall.summary', [['name', '=', summary.name]], ['name'], 0, 1)
+        let exist = await new_flectra.readElement('crm.phonecall.summary', [['name', '=', summary.name]], ['name'], 0, 1)
         if (!exist) {
-            await newFlectra.createElement({}, 'crm.phonecall.summary', { name: summary.name })
+            await new_flectra.createElement({}, 'crm.phonecall.summary', { name: summary.name })
         }
     })
 }
 
 const loadPhoneCalls = async () => {
-    let leads = await oldFlectra.readElement('crm.lead', [])
+    let leads = await old_flectra.readElement('crm.lead', [])
     let index = 592
     while (index > 300) {
         let lead = leads[index]
-        let newLead = await createIfNotExistLead({ old_lead: lead })
-        await updatePhoneCalls(newLead, lead.phonecall_ids)
+        let new_lead = await create_if_not_exist_Lead({ old_lead: lead })
+        await updatePhoneCalls(new_lead, lead.phonecall_ids)
         index--
         console.log(index)
     }
 }
 
 const loadCRMStages = async () => {
-    let stages = await oldFlectra.readElement('crm.stage', [], 0, 0, 0)
+    let stages = await old_flectra.readElement('crm.stage', [], 0, 0, 0)
     stages.forEach(async stage => {
-        await createIfNotExistStage({ old_stage: stage })
+        await create_if_not_exist_Stage({ old_stage: stage })
     })
 }
 
 const loadCRMTeams = async () => {
-    let teams = await oldFlectra.readElement('crm.team', [], 0, 0, 0)
+    let teams = await old_flectra.readElement('crm.team', [], 0, 0, 0)
     teams.forEach(async team => {
-        await createIfNotExistTeam({ old_team: team })
+        await create_if_not_exist_team({ old_team: team })
     })
 }
 
 const loadUsers = async () => {
-    let users = await oldFlectra.readElement('res.users', [], 0, 0, 0)
+    let users = await old_flectra.readElement('res.users', [], 0, 0, 0)
     users.forEach(async user => {
         await s.acquire()
         try {
-            console.log(s.nrWaiting() + ' calls to createIfNotExistUser are waiting')
-            await createIfNotExistUser({ old_user: user })
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_user are waiting')
+            await create_if_not_exist_user({ old_user: user })
         } finally {
             s.release();
         }
@@ -1074,12 +1369,24 @@ const loadUsers = async () => {
 }
 
 const loadPartners = async () => {
-    let partners = await oldFlectra.readElement('res.partner', [], 0, 0, 0)
+    let partners = await old_flectra.readElement('res.partner', [], 0, 0, 0)
     partners.forEach(async partner => {
         await s.acquire()
         try {
-            console.log(s.nrWaiting() + ' calls to createIfNotExistPartner are waiting')
-            await createIfNotExistPartner({ old_partner: partner })
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_partner are waiting')
+            await create_if_not_exist_partner({ old_partner: partner })
+        } finally {
+            s.release();
+        }
+    })
+}
+
+const loadInvoices = async (invoices) => {
+    invoices.forEach(async invoice => {
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to create_if_not_exist_invoice are waiting')
+            await create_if_not_exist_invoice({ old_invoice: invoice })
         } finally {
             s.release();
         }
@@ -1093,7 +1400,7 @@ const workWithThis = async (model, filter = [], callback) => {
     while (flag) {
         await s.acquire()
         try {
-            let elements = await oldFlectra.readElement(model, filter, 0, start, amount)
+            let elements = await old_flectra.readElement(model, filter, 0, start, amount)
             console.log(s.nrWaiting() + ` calls to workWithThis ${model} filter: ${filter} are waiting`)
             await callback(elements)
             flag = elements.length > 0
@@ -1116,9 +1423,17 @@ const referidosFilter = [
     ['name', 'like', 'REFERIDO']
 ]
 
+
+let date_start = '2019-07-01'
+let date_end = '2020-01-31'
+const invoicesFilter = [
+    ['date', '>=', date_start],
+    ['date', '<=', date_end]
+]
+
 const main = async () => {
-    await oldFlectra.connect(oldDeployData)
-    await newFlectra.connect(newDeployData)
+    await old_flectra.connect(oldDeployData)
+    await new_flectra.connect(newDeployData)
     let filter = luisFilter
     //await loadCRMPhonecallSummary()   //1
     //await loadCRMStages()             //2
@@ -1130,7 +1445,9 @@ const main = async () => {
     //await loadMessages(filter)
     //await workWithThis('crm.lead', filter, loadCRMLeads)
     //await workWithThis('crm.lead', filter, loadMessages)
-    await workWithThis('crm.lead', referidosFilter, updateLeads)
+    //await workWithThis('crm.lead', referidosFilter, updateLeads)
+    await workWithThis('account.invoice', invoicesFilter, loadInvoices)
+    await workWithThis('account.invoice', invoicesFilter, loadMessages)
 }
 
 main()
