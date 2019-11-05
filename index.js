@@ -1027,20 +1027,25 @@ const create_journal = async (journal) => {
 
     let new_debit_account = default_debit_account_id && await create_if_not_exist_account({old_account_id: default_debit_account_id[0]})
     let new_credit_account = default_credit_account_id && await create_if_not_exist_account({old_account_id: default_credit_account_id[0]})
+    let same_currency = currency_id && await compare_with_company_currency(currency_id[0])
 
     let new_journal = {
         name,
         type,
         code,
         show_on_dashboard,
-        currency_id: currency_id && currency_id[0],
         default_debit_account_id: new_debit_account && new_debit_account.id,
         default_credit_account_id: new_credit_account && new_credit_account.id
     }
 
+    /* if (!same_currency)
+        new_journal.currency_id =  currency_id && currency_id[0] */
+
     new_journal.id = new_flectra.createElement({}, 'account.journal', new_journal)
     return new_journal
 }
+
+///////////////////////////////////////////////////////////// GET ///////////////////////////////////////////////////////////////////
 
 const get_payment_term = async ({ old_payment_term, old_payment_term_id }) => {
     old_payment_term = old_payment_term || await old_flectra.readElement(
@@ -1075,7 +1080,23 @@ const get_membership_product = async () => {
     return new_element
 }
 
-///////////////////////////////////////////////////////////// GET ///////////////////////////////////////////////////////////////////
+const get_currency = async (name) => {
+    let currency = new_flectra.readElement(
+        'res.currency', 
+        [
+            ['name', '=', name]
+        ], 
+        ['id'], 0, 1)
+
+    return currency
+}
+
+const compare_with_company_currency = async (currency_id) => {
+    let company = new_flectra.readElement('res.company', [['id','=', 1]], ['currency_id'], 0, 1)
+    return company && company.currency_id && company.currency_id[0] === currency_id
+}
+
+///////////////////////////////////////////////////////////// create_if_not_exist ///////////////////////////////////////////////////////////////////
 
 const create_if_not_exist_user = async ({ old_user_id, old_user }) => {
     old_user = old_user || await old_flectra.readElement('res.users', [['id', '=', old_user_id]], ['name', 'login'], 0, 1)
