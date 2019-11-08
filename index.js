@@ -10,7 +10,13 @@ const s = new Sema(
 const Flectra = require('./flectra');
 const { processXLSXFiles } = require('./file')
 
-
+const deployData = {
+    "url": process.env.URL,
+    "port": process.env.PORT,
+    "db": process.env.DB,
+    "username": process.env.USER_NAME,
+    "password": process.env.PASSWORD
+}
 
 const crudLeads = async () => {
     try {
@@ -53,30 +59,33 @@ const crudLeads = async () => {
 }
 
 const processHeaders = (element) => {
+    console.log('element: ', element)
+
     let headers = {
-        "INICIATIVA": "name",
-        "CANAL DE VENTAS": "team",
-        "CONTACT NAME": "contact_name",
-        "DOMICILIO": "street",
-        "ADDRESS": "street2",
+        "OPPORTUNITY": "name",
+        "TEAM": "team",
+        "CONTACT_NAME": "contact_name",
+        "STREET": "street",
+        "STREET2": "street2",
         "CITY": "city",
+        "ZIP": "zip",
         "STATE": "state",
         "COUNTRY": "country",
         "PHONE": "phone",
         "MOBILE": "mobile",
         "EMAIL": "email",
-        "RANGO INGRESOS": "x_sources_note",
-        "BANCO": "x_sources_note",
-        "NOTAS DE FUENTE": "x_sources_note"
+        "EXTRA": "description"
     }
 
     let new_lead = {}
     for (let field in element) {
         let headersField = headers[field]
-        if (headersField === 'x_sources_note')
-            new_lead[headersField] = (!new_lead[headersField]) ? 'Notas: ' : new_lead[headersField] + element[field] + '\n'
-        else
-            new_lead[headersField] = element[field]
+        console.log('field: ', field, headersField)
+        if (headersField)
+            if (headersField === 'description')
+                new_lead[headersField] = !new_lead[headersField] ? element[field] + ' \n' : new_lead[headersField] + element[field] + ' \n'
+            else
+                new_lead[headersField] = element[field]
     }
 
     return new_lead
@@ -106,8 +115,8 @@ const processContact = (data) => {
         city,
         country,
         mobile,
-        country_id: (Array.isArray(country_id)) ? country_id[0] : country_id,
-        state_id: (Array.isArray(state_id)) ? state_id[0] : state_id,
+        country_id: country_id ? country_id[0] : country_id,
+        state_id: state_id ? state_id[0] : state_id,
         state
     }
 
@@ -118,9 +127,10 @@ const processXLSXToLeads = async () => {
     try {
         let main = new Flectra(deployData)
         await main.connect()
-        let team = (await main.readElement('crm.team', [['name', 'like', 'Parejeros-MTY-TP']], 0, 0, 1)) || {}
+        let team = await main.readElement('crm.team', [['name', 'like', 'CALL CENTER MTY']], 0, 0, 1) || {}
+        //console.log('team: ', team)
         let team_id = team.id
-        let agents = team.x_agent_ids || []
+        let agents = team.member_ids || []
         console.log('agents: ', agents.length)
 
         let country = await main.readElement('res.country', [['name', 'ilike', 'Mexico']], 0, 0, 1) || {}
@@ -148,14 +158,17 @@ const processXLSXToLeads = async () => {
                     country_id,
                     state_id
                 }
-                let lead = await main.readElement('crm.lead', [['name', 'like', new_lead.name]], ['id'], 0, 1)
+                
+                let client = processContact(new_lead)
 
-                let client = processContact(lead)
-                let partner = await main.readElement('res.partner', [['mobile', '=', client.mobile], ['name', '=', client.name]], ['id'], 0, 1)
+                let partner = client && await main.readElement('res.partner', [['mobile', '=', client.mobile], ['name', '=', client.name]], ['id'], 0, 1)
                 let partner_id = partner && partner.id
                 if (!partner_id)
                     partner_id = await main.createElement({}, 'res.partner', client)
+
                 new_lead.partner_id = partner_id
+
+                let lead = await main.readElement('crm.lead', [['name', 'like', new_lead.name]], ['id'], 0, 1)
 
                 if (lead && !lead.partner_id) {
                     console.log('existe lead: ', lead)
@@ -179,6 +192,8 @@ const processXLSXToLeads = async () => {
         console.log(error)
     }
 }
+
+processXLSXToLeads()
 
 const updateClient = async (main, lead) => {
     let client = processContact(lead)
@@ -306,7 +321,7 @@ const formatNotes = (lead) => {
         x_membership: "Membresia",
         x_club_name: "Club name",
         x_lang: "Languaje",
-        x_password: "Password",
+        //x_password: "Password",
         x_first_name_cotitular: "Cootitular's firt name",
         x_last_name_cotitular: "Cootitular's last name",
         x_date_purchased: "Purchased date",
@@ -329,7 +344,6 @@ const formatNotes = (lead) => {
         x_condo_rewards: "Condo",
         x_tours_traslados_rewards: "Tours",
         x_yates_rewards: "Yates",
-        x_currency_reservations: "Currency",
         x_hot_weeks: "Hot weeks",
         x_club_399: "Club399",
         x_vacancy_rewards: "Vacancy rewards",
@@ -1025,8 +1039,8 @@ const create_journal = async (journal) => {
         currency_id
     } = journal
 
-    let new_debit_account = default_debit_account_id && await create_if_not_exist_account({old_account_id: default_debit_account_id[0]})
-    let new_credit_account = default_credit_account_id && await create_if_not_exist_account({old_account_id: default_credit_account_id[0]})
+    let new_debit_account = default_debit_account_id && await create_if_not_exist_account({ old_account_id: default_debit_account_id[0] })
+    let new_credit_account = default_credit_account_id && await create_if_not_exist_account({ old_account_id: default_credit_account_id[0] })
     let same_currency = currency_id && await compare_with_company_currency(currency_id[0])
 
     let new_journal = {
@@ -1082,17 +1096,17 @@ const get_membership_product = async () => {
 
 const get_currency = async (name) => {
     let currency = new_flectra.readElement(
-        'res.currency', 
+        'res.currency',
         [
             ['name', '=', name]
-        ], 
+        ],
         ['id'], 0, 1)
 
     return currency
 }
 
 const compare_with_company_currency = async (currency_id) => {
-    let company = new_flectra.readElement('res.company', [['id','=', 1]], ['currency_id'], 0, 1)
+    let company = new_flectra.readElement('res.company', [['id', '=', 1]], ['currency_id'], 0, 1)
     return company && company.currency_id && company.currency_id[0] === currency_id
 }
 
@@ -1356,7 +1370,7 @@ const updatePhoneCalls = async (lead, phonecall_ids, isFisrtFlectra) => {
     }
 }
 
-const updateLeads = async (leads) => {
+const updateEmptyPartnerLeads = async (leads) => {
     leads.forEach(async lead => {
         await s.acquire()
         try {
@@ -1368,6 +1382,25 @@ const updateLeads = async (leads) => {
                     id: new_lead.id,
                     partner_id: new_partner.id,
                     contact_name: lead.contact_name
+                }
+                await new_flectra.updateElement('crm.lead', leadForUpdate)
+            }
+        } finally {
+            s.release();
+        }
+    })
+}
+
+const updateLeadDescriptions = async (leads) => {
+    leads.forEach(async lead => {
+        await s.acquire()
+        try {
+            console.log(s.nrWaiting() + ' calls to updatelead are waiting')
+            let new_lead = await create_if_not_exist_Lead({ old_lead: lead })
+            if (new_lead) {
+                let leadForUpdate = {
+                    id: new_lead.id,
+                    description: formatNotes(lead)
                 }
                 await new_flectra.updateElement('crm.lead', leadForUpdate)
             }
@@ -1391,14 +1424,14 @@ const loadMessages = async (elements = []) => {
             console.log('index: ', index)
             while (index < messages.length) {
                 console.log('index: ', index)
-                let message = messages[index] 
-                await s.acquire()
+                let message = messages[index]
+                //await s.acquire()
                 try {
                     console.log(s.nrWaiting() + ' calls to create_if_not_exist_Message are waiting')
                     await create_if_not_exist_Message({ old_message: message })
-    
+
                 } finally {
-                    s.release();
+                    // s.release();
                 }
                 index++
                 console.log('message: ', index)
@@ -1501,7 +1534,7 @@ const loadInvoices = async (invoices) => {
 }
 
 const loadAccounts = async (accounts) => {
-    accounts.forEach( async account => {
+    accounts.forEach(async account => {
         await s.acquire()
         try {
             console.log(s.nrWaiting() + ' calls to create_if_not_exist_account are waiting')
@@ -1513,7 +1546,7 @@ const loadAccounts = async (accounts) => {
 }
 
 const loadJournals = async (journals) => {
-    journals.forEach( async journal => {
+    journals.forEach(async journal => {
         await s.acquire()
         try {
             console.log(s.nrWaiting() + ' calls to create_if_not_exist_journal are waiting')
@@ -1554,6 +1587,10 @@ const referidosFilter = [
     ['name', 'like', 'REFERIDO']
 ]
 
+const reservations = [
+    ['name', 'like', 'RESERV:']
+]
+
 
 let date_start = '2019-07-01'
 let date_end = '2020-01-31'
@@ -1580,8 +1617,45 @@ const main = async () => {
     //await workWithThis('account.invoice', invoicesFilter, loadInvoices)
     //await workWithThis('account.invoice', invoicesFilter, loadMessages)
     //await workWithThis('account.journal', [], loadAccounts)
-    await workWithThis('account.journal', [], loadJournals)
-    
+    //await workWithThis('account.journal', [], loadJournals)
+    await workWithThis('crm.lead', reservations, updateLeadDescriptions)
 }
 
-main()
+//main()
+
+const formatDate = (date) => {
+    if (!date)
+        return
+
+    date.setSeconds(0)
+    date = date.toISOString()
+    date = date.replace(/T/, ' ').replace(/\..+/, '')
+    let time = date.split(' ')[1]
+    if (time) {
+        let hours = parseInt(time.split(':')[0])
+        let minutes = parseInt(time.split(':')[1])
+        let seconds = parseInt(time.split(':')[2])
+        if (seconds > 59) {
+            minutes = minutes + Math.trunc(seconds / 60)
+            seconds = seconds % 60
+        }
+
+        date = date.split(' ')[0] + ` ${hours}:${minutes}:${seconds}`
+    }
+    return date
+}
+
+const validateDateRange = (date_invoice) => {
+    if (!date_invoice) {
+        return false
+    }
+
+    let invoiceDate = new Date(date_invoice)
+    let finaldate = new Date()
+
+    var months;
+    months = (invoiceDate.getFullYear() - finaldate.getFullYear()) * 12;
+    months -= finaldate.getMonth() + 1;
+    months += invoiceDate.getMonth();
+    return months <= 6
+}
