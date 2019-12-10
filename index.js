@@ -1,12 +1,5 @@
-const { processXLSXToLeads } = require('./api')
-const crm_name = 'B2C'
-const country_name = 'Mexico'
-const state_name = 'Nuevo León'
-const agent_login = 'erik.cruz@vacancyrewards.com'
+const API = require('./api')
 
-processXLSXToLeads({
-    crm_name,
-    country_name, 
-    state_name, 
-    agent_login 
-})
+
+
+API.workWithThis('crm.lead', [['stage', '=', false]], API.updateLeadFields)

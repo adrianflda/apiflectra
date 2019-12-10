@@ -1565,6 +1565,27 @@ const loadJournals = async (journals) => {
         }
     })
 }
+let fields = { stage_id: 15 }
+const updateLeadFields = async (leads = []) => {
+    try {
+        let size = leads.length
+        let index = 0
+        while (index < size) {
+            let lead = leads[index]
+            let newLead = {
+                id: lead.id
+            }
+            for (let fieldName in fields) {
+                newLead[fieldName] = fields[fieldName]
+            }
+            await old_flectra.updateElement('crm.lead', lead)
+            index++
+        }
+        await s.acquire()
+    } finally {
+        s.release();
+    }
+}
 
 const workWithThis = async (model, filter = [], callback) => {
     let start = 0
@@ -1610,8 +1631,8 @@ const invoicesFilter = [
 
 const main = async () => {
     await old_flectra.connect(oldDeployData)
-    await new_flectra.connect(newDeployData)
-    let filter = luisFilter
+    //await new_flectra.connect(newDeployData)
+    //let filter = luisFilter
     //await loadCRMPhonecallSummary()   //1
     //await loadCRMStages()             //2
     //await loadUsers()                 //3
@@ -1627,10 +1648,10 @@ const main = async () => {
     //await workWithThis('account.invoice', invoicesFilter, loadMessages)
     //await workWithThis('account.journal', [], loadAccounts)
     //await workWithThis('account.journal', [], loadJournals)
-    await workWithThis('crm.lead', reservations, updateLeadDescriptions)
+    //await workWithThis('crm.lead', reservations, updateLeadDescriptions)
 }
 
-//main()
+main()
 
 const formatDate = (date) => {
     if (!date)
@@ -1670,5 +1691,7 @@ const validateDateRange = (date_invoice) => {
 }
 
 module.exports = {
-    processXLSXToLeads
+    processXLSXToLeads,
+    updateLeadFields,
+    workWithThis
 }
