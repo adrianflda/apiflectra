@@ -312,8 +312,8 @@ const oldDeployData = {
     "username": process.env.oldUSER_NAME,
     "password": process.env.oldPASSWORD
 }
-const old_flectra = new Flectra(oldDeployData)
-const new_flectra = new Flectra(newDeployData)
+var old_flectra
+var new_flectra
 
 String.prototype.replaceAll = function (search, replacement) {
     var target = this;
@@ -1631,6 +1631,8 @@ const invoicesFilter = [
 ]
 
 const main = async () => {
+    old_flectra = new Flectra(oldDeployData)
+    new_flectra = new Flectra(newDeployData)
     await old_flectra.connect(oldDeployData)
     //await new_flectra.connect(newDeployData)
     //let filter = luisFilter
@@ -1651,8 +1653,6 @@ const main = async () => {
     //await workWithThis('account.journal', [], loadJournals)
     //await workWithThis('crm.lead', reservations, updateLeadDescriptions)
 }
-
-main()
 
 const formatDate = (date) => {
     if (!date)
@@ -1694,5 +1694,6 @@ const validateDateRange = (date_invoice) => {
 module.exports = {
     processXLSXToLeads,
     updateLeadFields,
-    workWithThis
+    workWithThis,
+    main
 }
