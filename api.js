@@ -64,6 +64,7 @@ const processHeaders = (element) => {
     let headers = {
         "LEAD/OPPORTUNITY": "name",
         "TEAM": "team",
+        "AGENT_LOGIN": "agent_login",
         "CONTACT_NAME": "contact_name",
         "STREET": "street",
         "STREET2": "street2",
@@ -133,20 +134,7 @@ const processXLSXToLeads = async ({
     try {
         let main = new Flectra(deployData)
         await main.connect()
-        let team = await main.readElement('crm.team', [['name', 'like', crm_name]], 0, 0, 1) || {}
-        console.log('team: ', team && team.name)
-        let user = agent_login && await main.readElement('res.users', [['login', '=', agent_login]], ['id'], 0, 1)
-        let user_id = user && user.id
-        let team_id = team.id
-        let agents = user_id && [user_id] || team.member_ids
-        console.log('agents: ', agents.length)
-
-        let country = await main.readElement('res.country', [['name', 'ilike', country_name]], 0, 0, 1) || {}
-        let country_id = country.id
-        console.log('country: ', country_id)
-
-
-
+        
         let rawLeads = await processXLSXFiles('/home') || []
         console.log('leads: ', rawLeads.length)
         let agentIndex = 0
@@ -157,9 +145,28 @@ const processXLSXToLeads = async ({
             while (index < part) {
                 let element = rawLeads[index]
                 let new_lead = processHeaders(element)
-                let state = await main.readElement('res.country.state', [['name', 'ilike', new_lead.state]], 0, 0, 1) || {}
+
+                crm_name = new_lead.team || crm_name
+                let team = await main.readElement('crm.team', [['name', 'like', crm_name]], 0, 0, 1) || {}
+                console.log('team: ', team && team.name)
+                
+                agent_login = new_lead.agent_login || agent_login
+                let user = agent_login && await main.readElement('res.users', [['login', '=', agent_login]], ['id'], 0, 1)
+                let user_id = user && user.id
+                let team_id = team.id
+                let agents = user_id && [user_id] || team.member_ids
+                console.log('agents: ', agents.length)
+
+                country_name = new_lead.country || country_name
+                let country = await main.readElement('res.country', [['name', 'ilike', country_name]], 0, 0, 1) || {}
+                let country_id = country.id
+                console.log('country: ', country_id)
+
+                state_name = new_lead.state || state_name
+                let state = await main.readElement('res.country.state', [['name', 'ilike', state_name]], 0, 0, 1) || {}
                 let state_id = state.id
                 console.log('state: ', state_id)
+                
                 new_lead = {
                     ...new_lead,
                     team_id,
