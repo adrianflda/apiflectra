@@ -145,9 +145,7 @@ const processXLSXToLeads = async ({
         let country_id = country.id
         console.log('country: ', country_id)
 
-        let state = await main.readElement('res.country.state', [['name', 'ilike', state_name]], 0, 0, 1) || {}
-        let state_id = state.id
-        console.log('state: ', state_id)
+
 
         let rawLeads = await processXLSXFiles('/home') || []
         console.log('leads: ', rawLeads.length)
@@ -159,6 +157,9 @@ const processXLSXToLeads = async ({
             while (index < part) {
                 let element = rawLeads[index]
                 let new_lead = processHeaders(element)
+                let state = await main.readElement('res.country.state', [['name', 'ilike', new_lead.state]], 0, 0, 1) || {}
+                let state_id = state.id
+                console.log('state: ', state_id)
                 new_lead = {
                     ...new_lead,
                     team_id,
