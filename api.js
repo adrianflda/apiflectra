@@ -138,6 +138,9 @@ const processXLSXToLeads = async ({
         let rawLeads = await processXLSXFiles('/home') || []
         console.log('leads: ', rawLeads.length)
 
+        let team = await main.readElement('crm.team', [['name', 'like', crm_name]], 0, 0, 1) || {}
+        console.log('team: ', team && team.name)
+
         let user = agent_login && await main.readElement('res.users', [['login', '=', agent_login]], ['id'], 0, 1)
         let user_id = user && user.id
         let team_id = team.id
@@ -153,9 +156,7 @@ const processXLSXToLeads = async ({
                 let element = rawLeads[index]
                 let new_lead = processHeaders(element)
 
-                crm_name = new_lead.team || crm_name
-                let team = await main.readElement('crm.team', [['name', 'like', crm_name]], 0, 0, 1) || {}
-                console.log('team: ', team && team.name)
+
                 
                 country_name = new_lead.country || country_name
                 let country = await main.readElement('res.country', [['name', 'ilike', country_name]], 0, 0, 1) || {}
