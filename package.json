@@ -22,14 +22,14 @@
   },
   "homepage": "https://github.com/adrianflda/apiflectra#readme",
   "dependencies": {
-    "async-sema": "^3.0.1",
-    "convert-excel-to-json": "^1.6.1",
+    "async-sema": "^3.1.0",
+    "convert-excel-to-json": "^1.7.0",
     "cote": "^0.21.1",
     "csvtojson": "^2.0.10",
-    "dotenv": "^8.1.0",
+    "dotenv": "^8.2.0",
     "files-list": "^1.4.1",
     "odoo-xmlrpc": "^1.0.7",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5"
   }
 }

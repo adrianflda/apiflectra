@@ -17,6 +17,31 @@ const changeName = (element) => {
   return element;
 };
 
+const mergeOpportunity = async (ids) => {
+  return await main.mergeOpportunity(ids);
+};
+
+const mergeOpportunities = (allduplicates) => {
+  allduplicates.forEach((element) => {
+    mergeOpportunity(element);
+  });
+};
+
+const findDuplicated = (leads, name) => {
+  return leads.find((lead) => {
+    return lead.name === name;
+  });
+};
+
+const loadAllduplicates = (leads = []) => {
+  const allduplicates = [];
+  leads.forEach((lead) => {
+    let duplicates = findDuplicated(leads, lead) || [];
+    allduplicates.push(duplicates.map((element) => element.id));
+  });
+  return allduplicates;
+};
+
 const updateElement = async (model, element) => {
   await main.updateElement(model, element);
 };
@@ -41,11 +66,16 @@ const init = async () => {
 (async () => {
   await init();
   const model = "crm.lead";
-  const filter = [["name", "ilike", "agentleads-mty-monterrey"]];
-  const fields = ["id", "name"];
+  const filter = [
+    ["name", "ilike", "AGENTLEADS-MONTERREY"],
+    ["stage_id", "=", 15],
+  ];
+  const fields = ["id", "name", "stage_id"];
 
-  const elements = await search("crm.lead", filter, fields);
+  const elements = await search(model, filter, fields);
   console.log(elements && elements.length);
 
-  await updateElements(model, elements, changeName);
+  const duplicates = loadAllduplicates(elements);
+
+  mergeOpportunities(duplicates);
 })();

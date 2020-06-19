@@ -12,6 +12,7 @@ const CREATE = "create";
 const SEARCH_READ = "search_read";
 const WRITE = "write";
 const UNLINK = "unlink";
+const MERGE_OPPORTUNITY = "merge_opportunity";
 
 /**
  * Deploy data url, port, db, username, passowrd
@@ -199,6 +200,34 @@ class Flectra {
       this.execute_kw(model, UNLINK, params)
         .then((result) => resolve(result))
         .catch((e) => reject(e));
+    });
+  }
+
+  mergeOpportunity(ids = []) {
+    return new Promise((resolve, reject) => {
+      if (ids.length < 1) {
+        console.log("trace", "mergeOpportunities", [ids]);
+        reject("not element");
+        return;
+      }
+
+      let context = { ids };
+      let inParams = [];
+      inParams.push(context);
+      let params = [];
+      params.push(inParams);
+      try {
+        this.execute_kw("crm.lead", MERGE_OPPORTUNITY, params)
+          .then((result) => {
+            resolve(result);
+          })
+          .catch((e) => {
+            console.log("mergeOpportunity error: " + e);
+            reject(e);
+          });
+      } catch (e) {
+        console.log("mergeOpportunity error: " + e);
+      }
     });
   }
 }
