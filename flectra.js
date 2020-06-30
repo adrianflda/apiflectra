@@ -13,6 +13,7 @@ const SEARCH_READ = "search_read";
 const WRITE = "write";
 const UNLINK = "unlink";
 const MERGE_OPPORTUNITY = "merge_opportunity";
+const RES_PARTNER = "res.partner";
 
 /**
  * Deploy data url, port, db, username, passowrd
@@ -229,6 +230,49 @@ class Flectra {
         console.log("mergeOpportunity error: " + e);
       }
     });
+  }
+
+  /**
+   *
+   * @param {Array} filter [['field', 'operator', 'value']]
+   */
+  async getContact({ filter }) {
+    return await this.readElement(
+      RES_PARTNER,
+      filter,
+      ["name", "email", "phone", "mobile"],
+      0,
+      1
+    );
+  }
+
+  /**
+   * @param {String} name contact's name
+   * @param {String} mobile contact's mobile
+   * @param {String} phone contact's phone
+   * @param {String} email contact's email
+   * @param {Array} filter [['field', 'operator', 'value']]
+   */
+  async existContact({ name, mobile, phone, email, filter }) {
+    if (!filter) {
+      filter = [["name", "=", name]];
+      const fields = [];
+      mobile && fields.push(["mobile", "=", mobile]);
+      phone && fields.push(["phone", "=", phone]);
+      email && fields.push(["email", "=", email]);
+      let index = fields.length - 2;
+      while (index > -1) {
+        fields.splice(index, 0, "|");
+        index--;
+      }
+      filter = filter.concat(fields);
+    }
+    try {
+      console.log(filter);
+      return await this.getContact({ filter });
+    } catch (e) {
+      console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! error", e);
+    }
   }
 }
 
