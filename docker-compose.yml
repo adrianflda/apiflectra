@@ -1,11 +1,10 @@
-version: '2'
+version: "2"
 services:
   apiflectra:
     build: .
-    restart: on-failure
-    volumes:
-      - ../files/:/home
-
-networks:
-  microservices-network:
-    external: true
+    environment:
+      - FLECTRA_DEPLOY_URL=${FLECTRA_DEPLOY_URL}
+      - FLECTRA_DEPLOY_PORT=${FLECTRA_DEPLOY_PORT}
+      - FLECTRA_DEPLOY_DB=${FLECTRA_DEPLOY_DB}
+      - FLECTRA_DEPLOY_USERNAME=${FLECTRA_DEPLOY_USERNAME}
+      - FLECTRA_DEPLOY_PASSWORD=${FLECTRA_DEPLOY_PASSWORD}

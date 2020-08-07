@@ -1,0 +1,57 @@
+{
+  "type": 3,
+  "title": "apiflectra",
+  "description": "apiflectra",
+  "administrator_only": true,
+  "image": "node:latest",
+  "repository": {
+    "URL": "https://github.com/adrianflda/apiflectra",
+    "stackfile": "./docker-compose.yml"
+  },
+  "name": "apiflectra",
+  "env": [
+    {
+      "name": "FLECTRA_DEPLOY_URL",
+      "label": "FLECTRA_DEPLOY_URL",
+      "description": "FLECTRA_DEPLOY_URL",
+      "default": "http://10.2.2.30",
+      "preset": true
+    },
+    {
+      "name": "FLECTRA_DEPLOY_PORT",
+      "label": "FLECTRA_DEPLOY_PORT",
+      "description": "FLECTRA_DEPLOY_PORT",
+      "default": "7073",
+      "preset": true
+    },
+    {
+      "name": "FLECTRA_DEPLOY_DB",
+      "label": "FLECTRA_DEPLOY_DB",
+      "description": "FLECTRA_DEPLOY_DB",
+      "default": "vr",
+      "preset": true
+    },
+    {
+      "name": "FLECTRA_DEPLOY_USERNAME",
+      "label": "FLECTRA_DEPLOY_USERNAME",
+      "description": "FLECTRA_DEPLOY_USERNAME",
+      "default": "admin",
+      "preset": true
+    },
+    {
+      "name": "FLECTRA_DEPLOY_PASSWORD",
+      "label": "FLECTRA_DEPLOY_PASSWORD",
+      "description": "FLECTRA_DEPLOY_PASSWORD",
+      "default": "password",
+      "preset": false
+    }
+  ],
+  "platform": "linux",
+  "categories": [
+    "docker"
+  ],
+  "privileged": true,
+  "interactive": true,
+  "restart_policy": "always",
+  "hostname": "apiflectra"
+}

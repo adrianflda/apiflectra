@@ -63,7 +63,7 @@ const init = async () => {
   await main.connect();
 };
 
-(async () => {
+/* (async () => {
   await init();
   const model = "crm.lead";
   const filter = [
@@ -78,4 +78,15 @@ const init = async () => {
   const duplicates = loadAllduplicates(elements);
 
   mergeOpportunities(duplicates);
-})();
+})(); */
+
+(async () => {
+  await init();
+  const model = "crm.lead";
+  const filter = ['&', ["name", "ilike", "MEMB.WCALL"], ['active', '=', false]]
+
+  const fields = ["id", "name", "stage_id"];
+
+  const elements = await search(model, filter, fields) || [];
+  console.log(elements.length)
+})()
