@@ -14,6 +14,7 @@ const WRITE = "write";
 const UNLINK = "unlink";
 const MERGE_OPPORTUNITY = "merge_opportunity";
 const RES_PARTNER = "res.partner";
+const ACCOUNT_INVOICE = "account.invoice";
 
 /**
  * Deploy data url, port, db, username, passowrd
@@ -274,6 +275,43 @@ class Flectra {
       console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! error", e);
     }
   }
+
+  async updateInvoice({ invoice }) {
+    if (!invoice) {
+      return;
+    }
+    return await this.updateElement(ACCOUNT_INVOICE, invoice);
+  }
+
+  async deleteInvoice({ id }) {
+    if (!id) {
+      return;
+    }
+    return await this.deleteElement({
+      model: ACCOUNT_INVOICE,
+      id,
+    });
+  }
+
+  async cancelInvoice({ invoice }) {
+    invoice.state = "cancel";
+    return await this.updateInvoice({ invoice });
+  }
+
+  /**
+   *
+   * @param {Object} partner flectra contact
+   */
+  async cancelInvoicesByPartner({ partner }) {
+    const invoices = (partner && partner.invoice_ids) || [];
+    for (let id of invoices) {
+      try {
+        await this.cancelInvoice({ invoice: { id } });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
 }
 
 module.exports = Flectra;
