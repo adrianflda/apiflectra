@@ -34,11 +34,12 @@ const search = async (model, filter, fields, limit) => {
     return await main.readElement(model, filter, fields, 0, limit);
 };
 
-const updateInvoiceLine = async (invoice_id) => {
-    let invoice_line = await main.readElement(ACCOUNT_INVOICE_LINE, [['invoice_id', '=', invoice_id]], ['id', 'account_id']) || []
-    for (let { id } of invoice_line) {
-        await main.updateElement(ACCOUNT_INVOICE_LINE, { id, account_id: 27 })
+const updateInvoiceLine = async (id, fields) => {
+    let invoice_line = { id }
+    for (let field in fields) {
+        invoice_line[field] = fields[field]
     }
+    return await main.updateElement(ACCOUNT_INVOICE_LINE, invoice_line)
 }
 
 const updateInvoice = async (id, fields) => {
@@ -54,14 +55,19 @@ const getComercial = async (email) => {
     return user && user.id
 }
 
+const getProductId = async (filter) => {
+    let product = await main.readElement(PRODUCT_PRODUCT, filter, ['id'], 0, 1)
+    return product && product.id
+}
+
 const workWithThis = async (model, filter = [], callback) => {
     let start = 0
     let amount = 100
     let flag = true
     while (flag) {
         try {
-            let elements = await main.readElement(model, filter, ['id', 'name'], start, amount)
-            await callback(elements)
+            let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit'], start, amount)
+            callback(elements)
             flag = elements.length > 0
             start += amount
         } catch (error) {
@@ -76,18 +82,19 @@ const init = async () => {
 
 (async () => {
     await init();
-    let julio_user_id = await getComercial('julio.santamaria@vacancyrewards.com')
-    let user_id = await getComercial('karina.jankovsky@vacancyrewards.com')
+    //let julio_user_id = await getComercial('julio.santamaria@vacancyrewards.com')
+    //let user_id = await getComercial('karina.jankovsky@vacancyrewards.com')
+    let product_id = await getProductId([['barcode', '=', '123456789']])
+    if (!product_id)
+        return
 
-    const model = "account.invoice";
-    const filter = [["user_id", "=", julio_user_id], '|', ['state', '=', 'open'], ['state', '=', 'draft']];
+    const model = ACCOUNT_INVOICE_LINE;
+    const filter = [["product_id", "=", false]];
 
-    workWithThis(model, filter, async (elements) => {
-        for (let { id, name } of elements) {
-            console.log(name, 'begin')
-            await updateInvoice(id, { user_id, account_id: 3 })
-            await updateInvoiceLine(id)
-            console.log(name, 'end.......................')
-        }
+    workWithThis(model, filter, (elements) => {
+        elements.forEach(async ({ id, price_unit, name }) => {
+            await updateInvoiceLine(id, { price_unit, product_id })
+            console.log(name, product_id, price_unit)
+        });
     })
 })();
