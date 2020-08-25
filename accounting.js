@@ -68,7 +68,8 @@ const workWithThis = async (model, filter = [], product_id) => {
         try {
             let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit']) || []
             for (let { id, price_unit, name } of elements) {
-                await updateInvoiceLine(id, { price_unit, product_id })
+                await updateInvoiceLine(id, { price_unit, product_id, account_id: 27 })
+                //await updateInvoice(id, { account_id: 3 })
                 console.log(name, product_id, price_unit)
             }
             flag = elements.length > 0
