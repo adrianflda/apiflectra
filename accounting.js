@@ -73,7 +73,6 @@ const workWithThis = async (model, filter = [], product_id) => {
             }
             flag = elements.length > 0
             console.log(elements.length)
-            start += amount
         } catch (error) {
             console.error(error)
         }
