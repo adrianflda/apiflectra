@@ -91,10 +91,10 @@ const init = async () => {
     const model = ACCOUNT_INVOICE_LINE;
     const filter = [["product_id", "=", false]];
 
-    workWithThis(model, filter, (elements) => {
-        elements.forEach(async ({ id, price_unit, name }) => {
+    workWithThis(model, filter, async (elements) => {
+        for (let { id, price_unit, name } of elements) {
             await updateInvoiceLine(id, { price_unit, product_id })
             console.log(name, product_id, price_unit)
-        });
+        }
     })
 })();
