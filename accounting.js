@@ -60,20 +60,18 @@ const getProductId = async (filter) => {
     return product && product.id
 }
 
-const workWithThis = async (model, filter = [], product_id) => {
+const workWithThis = async (model, filter = [], fields, callback) => {
     let start = 0
     let amount = 100
     let flag = true
     while (flag) {
         try {
-            let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit']) || []
-            for (let { id, price_unit, name } of elements) {
-                await updateInvoiceLine(id, { price_unit, product_id, account_id: 27 })
-                //await updateInvoice(id, { account_id: 3 })
-                console.log(name, product_id, price_unit)
+            let elements = await main.readElement(model, filter, fields, start, amount) || []
+            for (let element of elements) {
+                await callback(element)
             }
             flag = elements.length > 0
-            console.log(elements.length)
+            start += amount
         } catch (error) {
             console.error(error)
         }
@@ -84,16 +82,34 @@ const init = async () => {
     await main.connect();
 };
 
-(async () => {
-    await init();
-    //let julio_user_id = await getComercial('julio.santamaria@vacancyrewards.com')
-    //let user_id = await getComercial('karina.jankovsky@vacancyrewards.com')
+const changeAccountId = async () => {
+    const model = ACCOUNT_INVOICE;
+    const filter = [["account_id", "!=", 3]];
+    const fields = ['id', 'name']
+
+    await workWithThis(model, filter, fields, async ({ id, name }) => {
+        //await updateInvoice(id, { account_id: 3 })
+        console.log(name)
+    })
+}
+
+const addProduct = async () => {
     let product_id = await getProductId([['barcode', '=', '123456789']])
     if (!product_id)
         return
 
     const model = ACCOUNT_INVOICE_LINE;
-    const filter = [["product_id", "=", false]];
+    const filter = ['|', ["product_id", "=", false], ["account_id", "!=", 3]];
+    const fields = ['id', 'name', 'price_unit']
 
-    await workWithThis(model, filter, product_id)
+    await workWithThis(model, filter, fields, async ({ id, price_unit, name }) => {
+        await updateInvoiceLine(id, { price_unit, product_id, account_id: 27 })
+        console.log(name, product_id, price_unit)
+    })
+}
+
+(async () => {
+    await init();
+    await addProduct()
+
 })();
