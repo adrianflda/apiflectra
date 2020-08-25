@@ -60,7 +60,7 @@ const getProductId = async (filter) => {
     return product && product.id
 }
 
-const workWithThis = async (model, filter = []) => {
+const workWithThis = async (model, filter = [], product_id) => {
     let start = 0
     let amount = 100
     let flag = true
@@ -94,5 +94,5 @@ const init = async () => {
     const model = ACCOUNT_INVOICE_LINE;
     const filter = [["product_id", "=", false]];
 
-    workWithThis(model, filter)
+    workWithThis(model, filter, product_id)
 })();
