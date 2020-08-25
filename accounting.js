@@ -66,12 +66,13 @@ const workWithThis = async (model, filter = [], product_id) => {
     let flag = true
     while (flag) {
         try {
-            let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit'], start, amount)
+            let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit'], start, amount) || []
             for (let { id, price_unit, name } of elements) {
                 await updateInvoiceLine(id, { price_unit, product_id })
                 console.log(name, product_id, price_unit)
             }
             flag = elements.length > 0
+            console.log(elements.length)
             start += amount
         } catch (error) {
             console.error(error)
