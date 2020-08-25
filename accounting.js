@@ -60,14 +60,17 @@ const getProductId = async (filter) => {
     return product && product.id
 }
 
-const workWithThis = async (model, filter = [], callback) => {
+const workWithThis = async (model, filter = []) => {
     let start = 0
     let amount = 100
     let flag = true
     while (flag) {
         try {
             let elements = await main.readElement(model, filter, ['id', 'name', 'price_unit'], start, amount)
-            callback(elements)
+            for (let { id, price_unit, name } of elements) {
+                await updateInvoiceLine(id, { price_unit, product_id })
+                console.log(name, product_id, price_unit)
+            }
             flag = elements.length > 0
             start += amount
         } catch (error) {
@@ -91,10 +94,5 @@ const init = async () => {
     const model = ACCOUNT_INVOICE_LINE;
     const filter = [["product_id", "=", false]];
 
-    workWithThis(model, filter, async (elements) => {
-        for (let { id, price_unit, name } of elements) {
-            await updateInvoiceLine(id, { price_unit, product_id })
-            console.log(name, product_id, price_unit)
-        }
-    })
+    workWithThis(model, filter)
 })();
