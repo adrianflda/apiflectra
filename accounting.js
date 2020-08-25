@@ -94,5 +94,5 @@ const init = async () => {
     const model = ACCOUNT_INVOICE_LINE;
     const filter = [["product_id", "=", false]];
 
-    workWithThis(model, filter, product_id)
+    await workWithThis(model, filter, product_id)
 })();
