@@ -6,6 +6,7 @@ const SALE_ORDER = "sale.order";
 const SALE_LAYOUT_CATEGORY = "sale.layout_category";
 const ACCOUNT_INVOICE = "account.invoice";
 const ACCOUNT_INVOICE_LINE = "account.invoice.line";
+const ACCOUNT_PAYMENT = "account.payment";
 const ACCOUNT_PAYMENT_TERM = "account.payment.term";
 const ACCOUNT_ACCOUNT = "account.account";
 const RES_CURRENCY = "res.currency";
@@ -60,6 +61,12 @@ const getProductId = async (filter) => {
     return product && product.id
 }
 
+const unlinkPayment = async ({ id, name }) => {
+    const filter = id ? [['id', '=', id]] : [['name', '=', name]]
+    const payment = await main.readElement(ACCOUNT_PAYMENT, filter, ['id'], 0, 1)
+    payment && await main.deleteElement(ACCOUNT_PAYMENT, payment.id)
+}
+
 const workWithThis = async (model, filter = [], fields, callback) => {
     let start = 0
     let amount = 100
@@ -93,13 +100,13 @@ const changeAccountId = async () => {
     })
 }
 
-const addProduct = async () => {
+const addProduct = async (id) => {
     let product_id = await getProductId([['barcode', '=', '123456789']])
     if (!product_id)
         return
 
     const model = ACCOUNT_INVOICE_LINE;
-    const filter = ['|', ["product_id", "=", false], ["account_id", "!=", 3]];
+    const filter = id ? [['invoice_id', '=', id]] : [["account_id", "!=", 27], ['name', 'like', 'MTYVR000053']];
     const fields = ['id', 'name', 'price_unit']
 
     await workWithThis(model, filter, fields, async ({ id, price_unit, name }) => {
@@ -108,8 +115,20 @@ const addProduct = async () => {
     })
 }
 
+const toDraft = async filter => {
+    const model = ACCOUNT_INVOICE;
+    filter = filter || [["number", "like", 'INV/2019/0171']];
+    const fields = ['id', 'name']
+
+    await workWithThis(model, filter, fields, async ({ id, name }) => {
+        await updateInvoice(id, { state: 'draft' })
+        await addProduct(id)
+        console.log(name)
+    })
+}
+
 (async () => {
     await init();
-    await addProduct()
-
+    await toDraft()
+    // unlinkPayment({ name: 'CUST.IN/2020/0027' })
 })();
