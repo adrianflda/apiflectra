@@ -49,7 +49,7 @@ const updateElement = async (model, element) => {
 const updateElements = async (model, elements, doSomeThing) => {
   let index = 0;
   for (let element of elements) {
-    await doSomeThing(element);
+    element = doSomeThing(element);
     await updateElement(model, element);
     console.log(index++, elements.length - index);
   }
@@ -83,10 +83,21 @@ const init = async () => {
 (async () => {
   await init();
   const model = "crm.lead";
-  const filter = ['&', ["name", "ilike", "MEMB.WCALL"], ['active', '=', false]]
+  //const filter = ['&', ["name", "ilike", "MEMB.WCALL"], ['active', '=', false]]
+  const filter = [
+    ["write_uid", "=", 243],
+    ["type", "=", "opportunity"],
+    ["active", "!=", true],
+    ["write_date", ">", "2021-05-01T00:00:00.000Z"],
+  ];
 
-  const fields = ["id", "name", "stage_id"];
+  const fields = ["id", "name"];
 
-  const elements = await search(model, filter, fields) || [];
-  console.log(elements.length)
-})()
+  const elements = (await search(model, filter, fields)) || [];
+  console.log(elements.length);
+
+  await updateElements(model, elements, (element) => ({
+    ...element,
+    active: true,
+  }));
+})();
